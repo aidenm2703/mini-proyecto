@@ -34,7 +34,7 @@
 
         <!-- Logo del login -->
         <div class="login-logo">
-          <i class="fa-solid fa-code-branch"></i>
+          <span class="brand-mark" aria-label="Logo AAA Software"><img src="assets/aaa-software-logo-reference.jpeg" alt="Logo AAA Software"></span>
         </div>
 
         <h1 class="login-title">Bienvenido al sistema de login</h1>
@@ -119,7 +119,7 @@
           </div>
           <table class="login-hint__table">
             <tr>
-              <td>admin / admin123</td>
+              <td>admin1 / admin123</td>
               <td><span class="role-dot role-dot--admin"></span>Administrador</td>
             </tr>
             <tr>
@@ -152,7 +152,7 @@
 
       <!-- Logo/Marca del sidebar -->
       <div class="sidebar-brand">
-        <i class="fa-solid fa-code-branch"></i>
+        <span class="brand-mark" aria-label="Logo AAA Software"><img src="assets/aaa-software-logo-reference.jpeg" alt="Logo AAA Software"></span>
         <span class="sidebar-brand__text">AdminSystem</span>
       </div>
 
@@ -160,57 +160,57 @@
       <nav class="sidebar-nav">
         <ul class="sidebar-nav__list">
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link active" data-section="dashboard">
+            <a href="#dashboard" class="sidebar-nav__link active" data-section="dashboard">
               <i class="fa-solid fa-gauge-high"></i>
               <span class="sidebar-nav__text">Dashboard</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="clientes">
+            <a href="#clientes" class="sidebar-nav__link" data-section="clientes">
               <i class="fa-solid fa-users"></i>
               <span class="sidebar-nav__text">Clientes</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="productos">
+            <a href="#productos" class="sidebar-nav__link" data-section="productos">
               <i class="fa-solid fa-box"></i>
               <span class="sidebar-nav__text">Productos</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="proveedores">
+            <a href="#proveedores" class="sidebar-nav__link" data-section="proveedores">
               <i class="fa-solid fa-truck"></i>
               <span class="sidebar-nav__text">Proveedores</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="encuestas">
+            <a href="#encuestas" class="sidebar-nav__link" data-section="encuestas">
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Encuestas</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="trazabilidad">
+            <a href="#trazabilidad" class="sidebar-nav__link" data-section="trazabilidad">
               <i class="fa-solid fa-clipboard-list"></i><span class="sidebar-nav__text">Trazabilidad</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="empleados">
+            <a href="#empleados" class="sidebar-nav__link" data-section="empleados">
               <i class="fa-solid fa-user-plus"></i><span class="sidebar-nav__text">Empleados y tareas</span>
             </a>
           </li>
           <!-- Opciones exclusivas del colaborador/usuario. -->
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miPortal">
+            <a href="#miPortal" class="sidebar-nav__link" data-section="miPortal">
               <i class="fa-solid fa-calendar-check"></i><span class="sidebar-nav__text">Mi asistencia</span>
             </a>
           </li>
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miCalendario">
+            <a href="#miCalendario" class="sidebar-nav__link" data-section="miCalendario">
               <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario laboral</span>
             </a>
           </li>
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miEncuesta">
+            <a href="#miEncuesta" class="sidebar-nav__link" data-section="miEncuesta">
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Mi encuesta</span>
             </a>
           </li>
@@ -272,6 +272,7 @@
           <div id="notificationPanel" class="notification-panel" hidden>
             <div class="notification-panel__header"><strong>Notificaciones</strong><button id="btnClearNotifications" type="button">Marcar leídas</button></div>
             <div id="notificationList" class="notification-list"></div>
+            <div id="notificationDetail" class="notification-detail" aria-live="polite">Seleccione una notificación para ver el detalle.</div>
           </div>
           </div>
           </div>
@@ -772,6 +773,7 @@
         <section id="secEmpleados" class="content-section admin-only" aria-label="Empleados y tareas">
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-user-plus"></i> Agregar empleado</h2></div><div class="panel__body"><form id="employeeForm" class="form-grid"><div class="form-group"><label for="employeeName">Nombre completo</label><input id="employeeName" class="form-input" required placeholder="Ej. Ana López"></div><div class="form-group"><label for="employeeUsername">Usuario</label><input id="employeeUsername" class="form-input" required placeholder="ana.lopez"></div><div class="form-group form-group--full"><label for="employeePassword">Contraseña inicial</label><input id="employeePassword" type="password" class="form-input" required></div><button class="btn-action btn-action--primary form-group--full" type="submit"><i class="fa-solid fa-plus"></i> Crear empleado</button></form></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Asignar tarea</h2></div><div class="panel__body"><form id="taskAssignmentForm" class="form-grid"><div class="form-group"><label for="taskEmployee">Empleado</label><select id="taskEmployee" class="form-select" required></select></div><div class="form-group"><label for="taskDate">Día</label><input id="taskDate" type="date" class="form-input" required></div><div class="form-group form-group--full"><label for="taskTitle">Tarea</label><input id="taskTitle" class="form-input" required></div><div class="form-group"><label for="taskPriority">Prioridad</label><select id="taskPriority" class="form-select"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Asignar</button></form></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Control de tareas asignadas</h2><div class="task-admin-actions"><select id="taskPriorityFilter" class="form-select" aria-label="Filtrar por prioridad"><option value="todas">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select><button id="btnClearTasks" type="button" class="btn-action btn-action--danger"><i class="fa-solid fa-broom"></i> Limpiar tareas</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Empleado</th><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody id="assignedTasksBody"></tbody></table></div></div></div>
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-chart-line"></i> Productividad por empleado</h2></div><div class="panel__body" id="productivityReport"></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-trophy"></i> Reconocimiento mensual</h2></div><div class="panel__body" id="monthlyRecognition"></div></div></div>
         </section>
 
@@ -816,6 +818,7 @@
           <article><i class="fa-solid fa-bullseye"></i><div><h3>Misión</h3><p>Crear software confiable que simplifique el trabajo y ayude a crecer a nuestros clientes.</p></div></article>
           <article><i class="fa-solid fa-compass"></i><div><h3>Visión</h3><p>Ser un aliado tecnológico referente en Costa Rica y Latinoamérica.</p></div></article>
           <article><i class="fa-solid fa-code"></i><div><h3>Valores</h3><p>Innovación responsable, colaboración, calidad y cercanía con las personas.</p></div></article>
+          <small class="company-copyright">© 2026 AAA Software · Derechos reservados de los autores.</small>
         </footer>
       </div><!-- fin .content-area -->
     </main><!-- fin .main-content -->

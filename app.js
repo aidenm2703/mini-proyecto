@@ -8,7 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ----- Datos y estado general de la aplicación -----
   const users = {
-    admin: { password: 'admin123', name: 'Administrador', role: 'Admin' },
+    admin1: { password: 'admin123', name: 'Administrador', role: 'Admin', username: 'admin1' },
     usuario1: { password: 'pass123', name: 'María Fernanda López', role: 'Usuario', username: 'usuario1' }
   };
   let failedAttempts = 0;
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = users[username] || Object.values(users).find((item) => item.name.toLowerCase() === username) || savedEmployees.find((item) => item.username.toLowerCase() === username || item.name.toLowerCase() === username);
 
     // Además de la contraseña, el usuario debe pertenecer al portal seleccionado.
-    if (user && user.password === password && user.role === selectedRole) {
+    if (user && user.password === password) {
       failedAttempts = 0; // Un acceso correcto reinicia el contador de seguridad.
       if (elevatorMusic) { window.clearInterval(elevatorMusic); elevatorMusic = null; }
       currentUser = user;
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('dashboardScreen').classList.toggle('user-session', user.role === 'Usuario');
       $('dashboardScreen').classList.toggle('admin-session', user.role === 'Admin');
       changeSection(user.role === 'Usuario' ? 'miPortal' : 'dashboard');
+      playSuccessSound();
       showToast(`Bienvenido/a, ${user.name}.`);
       return;
     }
@@ -148,17 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Simula una cámara: decide la lectura y, si es válida, envía el formulario normal.
-  $('btnBiometric').addEventListener('click', () => {
-    const status = $('biometricStatus');
-    status.textContent = 'Escaneando rostro…';
-    $('btnBiometric').disabled = true;
-    window.setTimeout(() => {
-      const accepted = Math.random() > 0.3;
-      status.textContent = accepted ? 'Identidad biométrica verificada. Validando acceso…' : 'Identidad no reconocida. Intente nuevamente.';
-      $('btnBiometric').disabled = false;
-      if (accepted) $('loginForm').requestSubmit();
-    }, 1800);
-  });
 
   function updateUserInterface() {
     const initial = currentUser.name.charAt(0).toUpperCase();
@@ -195,8 +185,11 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sidebar-nav__link').forEach((item) => item.classList.toggle('active', item.dataset.section === section));
     $(`sec${section[0].toUpperCase()}${section.slice(1)}`).classList.add('active');
     document.querySelector('.survey-admin-results')?.classList.toggle('visible', section === 'encuestas');
-    $('pageTitle').textContent = names[section];
-    $('pageBreadcrumb').textContent = `Inicio / ${names[section]}`;
+    const language = localStorage.getItem('aaa_language') || 'es';
+    const titleIndex = ['dashboard', 'clientes', 'productos', 'proveedores', 'encuestas', 'trazabilidad', 'empleados', 'miPortal', 'miCalendario', 'miEncuesta'].indexOf(section);
+    const sectionTitle = languageText[language]?.[titleIndex] || names[section];
+    $('pageTitle').textContent = sectionTitle;
+    $('pageBreadcrumb').textContent = `${language === 'en' ? 'Home' : language === 'fr' ? 'Accueil' : language === 'it' ? 'Home' : language === 'pt' ? 'Início' : 'Inicio'} / ${sectionTitle}`;
     if (window.location.hash !== `#${section}`) window.history.replaceState(null, '', `#${section}`);
     $('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
     closeMobileMenu();
@@ -231,18 +224,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const notifications = [
-    { icon: 'fa-list-check', title: 'Tareas pendientes', text: 'Revisa las tareas asignadas al personal.', time: 'Ahora' },
-    { icon: 'fa-boxes-stacked', title: 'Inventario', text: 'Hay productos con stock bajo.', time: 'Hoy' },
-    { icon: 'fa-shield-halved', title: 'Seguridad', text: 'El acceso está protegido y monitoreado.', time: 'Hoy' }
+    { icon: 'fa-list-check', title: 'Tareas pendientes', text: 'Revisa las tareas asignadas al personal.', detail: 'Hay tareas pendientes de actualización. Abra Empleados y tareas para revisar responsables, fechas y prioridad.', time: 'Ahora' },
+    { icon: 'fa-boxes-stacked', title: 'Inventario', text: 'Hay productos con stock bajo.', detail: 'El inventario requiere revisión. En Productos puede consultar el stock y actualizar los artículos necesarios.', time: 'Hoy' },
+    { icon: 'fa-shield-halved', title: 'Seguridad', text: 'El acceso está protegido y monitoreado.', detail: 'No hay acciones obligatorias. El sistema mantiene un registro de intentos de acceso para el administrador.', time: 'Hoy' }
   ];
+  let visibleNotifications = [];
   function renderNotifications() {
     const alerts = JSON.parse(localStorage.getItem(securityStorage || 'aaa_security_alerts') || '[]');
     const items = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
-    const list = [...items, ...notifications];
-    $('notificationList').innerHTML = list.map((notice) => `<button type="button" class="notification-item"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
-    $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = list.length;
+    const taskUpdates = JSON.parse(localStorage.getItem('aaa_task_notifications') || '[]').slice(0, 5).map((item) => ({ icon: item.done ? 'fa-circle-check' : 'fa-rotate-left', title: item.done ? 'Tarea completada' : 'Tarea reabierta', text: `${item.employee}: ${item.title}`, detail: `${item.employee} marcó la tarea “${item.title}” como ${item.done ? 'completada' : 'pendiente'}.`, time: item.time }));
+    visibleNotifications = [...taskUpdates, ...items.map((item) => ({ ...item, detail: 'Se detectó un intento de acceso. Puede revisar la información de seguridad y confirmar que la persona use sus credenciales correctas.' })), ...notifications];
+    $('notificationList').innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
+    $('notificationDetail').textContent = 'Seleccione una notificación para ver el detalle.';
+    $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = visibleNotifications.length;
   }
   $('btnNotifications').addEventListener('click', (event) => { event.stopPropagation(); const panel = $('notificationPanel'); const open = panel.hidden; panel.hidden = !open; $('btnNotifications').setAttribute('aria-expanded', String(open)); if (open) renderNotifications(); });
+  $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail)}</span>`; });
   $('btnClearNotifications').addEventListener('click', () => { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = '0'; showToast('Notificaciones marcadas como leídas.'); });
   document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
 
@@ -256,6 +253,17 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   function setLanguage(language) {
     document.documentElement.lang = language;
+    const common = {
+      en: { 'Iniciar sesión':'Sign in','Cerrar sesión':'Sign out','Administrador':'Administrator','Usuario':'User','Clientes':'Clients','Productos':'Products','Proveedores':'Suppliers','Encuestas':'Surveys','Trazabilidad':'Traceability','Empleados y tareas':'Employees & tasks','Mi asistencia':'My attendance','Calendario laboral':'Work calendar','Mi encuesta':'My survey','Guardar':'Save','Cancelar':'Cancel','Nuevo cliente':'New client','Nuevo producto':'New product','Nuevo proveedor':'New supplier','Agregar empleado':'Add employee','Asignar tarea':'Assign task','Horario de lunes a viernes':'Monday to Friday schedule','Entrada':'Check-in','Almuerzo':'Lunch','Salida':'Check-out','Misión':'Mission','Visión':'Vision','Valores':'Values','Derechos reservados de los autores.':'All rights reserved by the authors.','Notificaciones':'Notifications','Marcar leídas':'Mark as read','Modo claro':'Light mode','Modo oscuro':'Dark mode' },
+      pt: { 'Iniciar sesión':'Entrar','Cerrar sesión':'Sair','Administrador':'Administrador','Usuario':'Usuário','Clientes':'Clientes','Productos':'Produtos','Proveedores':'Fornecedores','Encuestas':'Pesquisas','Trazabilidad':'Rastreabilidade','Empleados y tareas':'Funcionários e tarefas','Mi asistencia':'Minha presença','Calendario laboral':'Calendário de trabalho','Mi encuesta':'Minha pesquisa','Guardar':'Salvar','Cancelar':'Cancelar','Nuevo cliente':'Novo cliente','Nuevo producto':'Novo produto','Nuevo proveedor':'Novo fornecedor','Agregar empleado':'Adicionar funcionário','Asignar tarea':'Atribuir tarefa','Horario de lunes a viernes':'Horário de segunda a sexta','Entrada':'Entrada','Almuerzo':'Almoço','Salida':'Saída','Misión':'Missão','Visión':'Visão','Valores':'Valores','Derechos reservados de los autores.':'Todos os direitos reservados aos autores.','Notificaciones':'Notificações','Marcar leídas':'Marcar como lidas' },
+      it: { 'Iniciar sesión':'Accedi','Cerrar sesión':'Esci','Administrador':'Amministratore','Usuario':'Utente','Clientes':'Clienti','Productos':'Prodotti','Proveedores':'Fornitori','Encuestas':'Sondaggi','Trazabilidad':'Tracciabilità','Empleados y tareas':'Dipendenti e attività','Mi asistencia':'La mia presenza','Calendario laboral':'Calendario di lavoro','Mi encuesta':'Il mio sondaggio','Guardar':'Salva','Cancelar':'Annulla','Nuevo cliente':'Nuovo cliente','Nuevo producto':'Nuovo prodotto','Nuevo proveedor':'Nuovo fornitore','Agregar empleado':'Aggiungi dipendente','Asignar tarea':'Assegna attività','Horario de lunes a viernes':'Orario da lunedì a venerdì','Entrada':'Entrata','Almuerzo':'Pranzo','Salida':'Uscita','Misión':'Missione','Visión':'Visione','Valores':'Valori','Derechos reservados de los autores.':'Tutti i diritti riservati agli autori.','Notificaciones':'Notifiche','Marcar leídas':'Segna come lette' },
+      fr: { 'Iniciar sesión':'Se connecter','Cerrar sesión':'Se déconnecter','Administrador':'Administrateur','Usuario':'Utilisateur','Clientes':'Clients','Productos':'Produits','Proveedores':'Fournisseurs','Encuestas':'Enquêtes','Trazabilidad':'Traçabilité','Empleados y tareas':'Employés et tâches','Mi asistencia':'Ma présence','Calendario laboral':'Calendrier de travail','Mi encuesta':'Mon enquête','Guardar':'Enregistrer','Cancelar':'Annuler','Nuevo cliente':'Nouveau client','Nuevo producto':'Nouveau produit','Nuevo proveedor':'Nouveau fournisseur','Agregar empleado':'Ajouter un employé','Asignar tarea':'Attribuer une tâche','Horario de lunes a viernes':'Horaire du lundi au vendredi','Entrada':'Entrée','Almuerzo':'Déjeuner','Salida':'Sortie','Misión':'Mission','Visión':'Vision','Valores':'Valeurs','Derechos reservados de los autores.':'Tous droits réservés aux auteurs.','Notificaciones':'Notifications','Marcar leídas':'Marquer comme lues' }
+    };
+    const dictionary = common[language] || {};
+    const words = { en:{'Agregar':'Add','Crear':'Create','Empleado':'Employee','Empleados':'Employees','Tarea':'Task','Tareas':'Tasks','Alta':'High','Media':'Medium','Baja':'Low','Limpiar':'Clear','Completada':'Completed','Pendiente':'Pending','Enviar':'Send','Reporte':'Report','Producto':'Product','Proveedor':'Supplier','Cliente':'Client','Lista':'List','Nombre':'Name','Fecha':'Date','Precio':'Price','Estado':'Status','Acciones':'Actions','Buscar':'Search','Actualizar':'Update','Evaluación':'Evaluation','Satisfacción':'Satisfaction','Comentario':'Comment','Horario':'Schedule','Día':'Day','Contraseña':'Password','Usuario':'User'}, pt:{'Agregar':'Adicionar','Crear':'Criar','Empleado':'Funcionário','Empleados':'Funcionários','Tarea':'Tarefa','Tareas':'Tarefas','Alta':'Alta','Media':'Média','Baja':'Baixa','Limpiar':'Limpar','Completada':'Concluída','Pendiente':'Pendente','Enviar':'Enviar','Reporte':'Relatório','Producto':'Produto','Proveedor':'Fornecedor','Cliente':'Cliente','Lista':'Lista','Nombre':'Nome','Fecha':'Data','Precio':'Preço','Estado':'Estado','Acciones':'Ações','Buscar':'Pesquisar','Actualizar':'Atualizar','Evaluación':'Avaliação','Satisfacción':'Satisfação','Comentario':'Comentário','Horario':'Horário','Día':'Dia','Contraseña':'Senha','Usuario':'Usuário'}, it:{'Agregar':'Aggiungi','Crear':'Crea','Empleado':'Dipendente','Empleados':'Dipendenti','Tarea':'Attività','Tareas':'Attività','Alta':'Alta','Media':'Media','Baja':'Bassa','Limpiar':'Pulisci','Completada':'Completata','Pendiente':'In sospeso','Enviar':'Invia','Reporte':'Rapporto','Producto':'Prodotto','Proveedor':'Fornitore','Cliente':'Cliente','Lista':'Elenco','Nombre':'Nome','Fecha':'Data','Precio':'Prezzo','Estado':'Stato','Acciones':'Azioni','Buscar':'Cerca','Actualizar':'Aggiorna','Evaluación':'Valutazione','Satisfacción':'Soddisfazione','Comentario':'Commento','Horario':'Orario','Día':'Giorno','Contraseña':'Password','Usuario':'Utente'}, fr:{'Agregar':'Ajouter','Crear':'Créer','Empleado':'Employé','Empleados':'Employés','Tarea':'Tâche','Tareas':'Tâches','Alta':'Haute','Media':'Moyenne','Baja':'Basse','Limpiar':'Effacer','Completada':'Terminée','Pendiente':'En attente','Enviar':'Envoyer','Reporte':'Rapport','Producto':'Produit','Proveedor':'Fournisseur','Cliente':'Client','Lista':'Liste','Nombre':'Nom','Fecha':'Date','Precio':'Prix','Estado':'État','Acciones':'Actions','Buscar':'Rechercher','Actualizar':'Mettre à jour','Evaluación':'Évaluation','Satisfacción':'Satisfaction','Comentario':'Commentaire','Horario':'Horaire','Día':'Jour','Contraseña':'Mot de passe','Usuario':'Utilisateur'} };
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, { acceptNode: (node) => node.parentElement.closest('script,style,option') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT });
+    const textNodes = []; while (walker.nextNode()) textNodes.push(walker.currentNode);
+    textNodes.forEach((node) => { node.__sourceText ??= node.nodeValue; const source = node.__sourceText; const trimmed = source.trim(); let translated = Object.prototype.hasOwnProperty.call(dictionary, trimmed) ? source.replace(trimmed, dictionary[trimmed]) : source; Object.entries(words[language] || {}).sort((a,b)=>b[0].length-a[0].length).forEach(([from,to])=>{translated=translated.replace(new RegExp(`\\b${from}\\b`,'g'),to);}); node.nodeValue = translated; });
     document.querySelectorAll('.sidebar-nav__text').forEach((node, index) => { if (languageText[language][index]) node.textContent = languageText[language][index]; });
     localStorage.setItem('aaa_language', language);
     $('languageSelect').value = language;
@@ -343,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     completed = event.target.checked ? [...new Set([...completed, index])] : completed.filter((item) => item !== index);
     localStorage.setItem(taskStorageKey(), JSON.stringify(completed));
     const taskTitle = event.target.dataset.assignment;
-    if (taskTitle) { const list = assignments(); const assigned = list.find((task) => task.employee === currentEmployeeName() && task.date === todayKey() && task.title === taskTitle); if (assigned) { assigned.done = event.target.checked; localStorage.setItem(assignmentStorage, JSON.stringify(list)); renderEmployeeAdmin(); } }
+    if (taskTitle) { const list = assignments(); const assigned = list.find((task) => task.employee === currentEmployeeName() && task.date <= todayKey() && task.title === taskTitle); if (assigned) { assigned.done = event.target.checked; localStorage.setItem(assignmentStorage, JSON.stringify(list)); const taskAlerts=JSON.parse(localStorage.getItem('aaa_task_notifications')||'[]'); taskAlerts.unshift({employee:currentEmployeeName(),title:taskTitle,done:event.target.checked,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}); localStorage.setItem('aaa_task_notifications',JSON.stringify(taskAlerts.slice(0,20))); renderEmployeeAdmin(); } }
     renderTasks(); renderTraceability();
   });
 
@@ -372,14 +380,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const assignments = () => JSON.parse(localStorage.getItem(assignmentStorage) || '[]');
   const currentEmployeeName = () => currentUser?.name || 'María Fernanda López';
   const employeeQuestions = ['Claridad de las tareas', 'Ambiente laboral', 'Comunicación con administración', 'Herramientas de trabajo'];
-  $('btnBiometric').addEventListener('click', async (event) => { event.stopImmediatePropagation(); const status=$('biometricStatus'), video=$('biometricVideo'); status.textContent='Abriendo cámara…'; $('btnBiometric').disabled=true; try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; window.setTimeout(()=>{status.textContent='Reconocido. Ingrese su contraseña para continuar.'; $('btnBiometric').disabled=false; $('loginPass').focus();},1200); } catch { status.textContent='Cámara no disponible. Ingrese su contraseña normalmente.'; $('btnBiometric').disabled=false; } }, true);
+  $('btnBiometric').addEventListener('click', async () => { const status=$('biometricStatus'), video=$('biometricVideo'), button=$('btnBiometric'); status.textContent='Analizando rasgos faciales…'; button.disabled=true; video.classList.add('biometric-video--scanning'); try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; } catch { video.hidden=true; } window.setTimeout(()=>{video.classList.remove('biometric-video--scanning');status.textContent='Persona no reconocida. Ingrese con su contraseña.';button.disabled=false;$('loginPass').focus();},2200); });
   function registerSecurityAlert(attemptedUser) { const alerts=JSON.parse(localStorage.getItem(securityStorage)||'[]'); alerts.unshift({attemptedUser,date:new Date().toLocaleDateString('es-GT'),time:new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}); localStorage.setItem(securityStorage,JSON.stringify(alerts)); }
   $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
   $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();showToast('Encuesta enviada.');});
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${q}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
-  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;}
+  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
+  function renderAssignedTasks(){const filter=$('taskPriorityFilter').value, tasks=assignments().filter(task=>filter==='todas'||task.priority===filter);$('assignedTasksBody').innerHTML=tasks.length?tasks.sort((a,b)=>({alta:0,media:1,baja:2}[a.priority]-({alta:0,media:1,baja:2}[b.priority]))).map(task=>`<tr><td>${escapeHtml(task.employee)}</td><td>${escapeHtml(task.title)}</td><td>${task.date}</td><td><span class="task-priority task-priority--${task.priority}">${capitalize(task.priority)}</span></td><td>${task.done?'Completada':'Pendiente'}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="5">No hay tareas para este filtro.</td></tr>';}
+  $('taskPriorityFilter').addEventListener('change',renderAssignedTasks);
+  $('btnClearTasks').addEventListener('click',()=>{if(!assignments().length)return showToast('No hay tareas para limpiar.');localStorage.removeItem(assignmentStorage);localStorage.removeItem('aaa_task_notifications');renderEmployeeAdmin();renderTasks();showToast('Todas las tareas asignadas fueron eliminadas.');});
   $('dailyReportForm').addEventListener('submit',e=>{e.preventDefault();const r=JSON.parse(localStorage.getItem(reportStorage)||'[]');r.unshift({name:currentEmployeeName(),text:$('dailyReportText').value.trim(),date:todayKey()});localStorage.setItem(reportStorage,JSON.stringify(r));$('dailyReportStatus').textContent='Reporte enviado correctamente.';e.currentTarget.reset();renderEmployeeAdmin();showToast('Reporte de jornada enviado.');});
   renderSurveyResults(); renderEmployeeAdmin();
 
