@@ -37,8 +37,21 @@
           <i class="fa-solid fa-cube"></i>
         </div>
 
-        <h1 class="login-title">Sistema Administrativo</h1>
-        <p class="login-subtitle">Ingrese sus credenciales para acceder al sistema</p>
+        <h1 class="login-title">Bienvenido al sistema de login</h1>
+        <p class="login-subtitle">AAA Software · Ingrese sus credenciales aquí</p>
+
+        <!-- Primera vista: la persona elige el portal que necesita usar. -->
+        <div id="roleSelector" class="role-selector">
+          <p class="role-selector__text">Seleccione el tipo de acceso</p>
+          <div class="role-selector__buttons">
+            <button type="button" class="role-access-btn role-access-btn--admin" data-role="Admin">
+              <i class="fa-solid fa-user-shield"></i><span>Administrador<small>Gestión completa</small></span>
+            </button>
+            <button type="button" class="role-access-btn role-access-btn--user" data-role="Usuario">
+              <i class="fa-solid fa-user"></i><span>Usuario<small>Asistencia y horario</small></span>
+            </button>
+          </div>
+        </div>
 
         <!-- Mensaje de error del login -->
         <div id="loginError" class="login-error" style="display:none;" role="alert">
@@ -46,8 +59,12 @@
           <span id="loginErrorText">Credenciales incorrectas</span>
         </div>
 
-        <!-- Formulario de login -->
-        <form id="loginForm" novalidate>
+        <!-- Segunda vista: siempre exige usuario y contraseña para continuar. -->
+        <form id="loginForm" novalidate style="display:none;">
+          <div class="login-form-heading">
+            <button type="button" id="btnBackRoles" class="btn-back-roles"><i class="fa-solid fa-arrow-left"></i> Volver</button>
+            <strong id="selectedRoleLabel">Acceso</strong>
+          </div>
           <div class="form-group">
             <label for="loginUser">Usuario</label>
             <div class="form-input-wrap">
@@ -87,8 +104,8 @@
           </button>
         </form>
 
-        <!-- Credenciales de prueba -->
-        <div class="login-hint">
+        <!-- Credenciales de prueba, visibles solo mientras se elige el acceso. -->
+        <div id="loginHint" class="login-hint">
           <div class="login-hint__title">
             <i class="fa-solid fa-circle-info"></i>
             Credenciales de prueba
@@ -135,28 +152,39 @@
       <!-- Enlaces de navegación -->
       <nav class="sidebar-nav">
         <ul class="sidebar-nav__list">
-          <li>
+          <li class="admin-only">
             <a href="#" class="sidebar-nav__link active" data-section="dashboard">
               <i class="fa-solid fa-gauge-high"></i>
               <span class="sidebar-nav__text">Dashboard</span>
             </a>
           </li>
-          <li>
+          <li class="admin-only">
             <a href="#" class="sidebar-nav__link" data-section="clientes">
               <i class="fa-solid fa-users"></i>
               <span class="sidebar-nav__text">Clientes</span>
             </a>
           </li>
-          <li>
+          <li class="admin-only">
             <a href="#" class="sidebar-nav__link" data-section="productos">
               <i class="fa-solid fa-box"></i>
               <span class="sidebar-nav__text">Productos</span>
             </a>
           </li>
-          <li>
+          <li class="admin-only">
             <a href="#" class="sidebar-nav__link" data-section="proveedores">
               <i class="fa-solid fa-truck"></i>
               <span class="sidebar-nav__text">Proveedores</span>
+            </a>
+          </li>
+          <!-- Opciones exclusivas del colaborador/usuario. -->
+          <li class="user-only">
+            <a href="#" class="sidebar-nav__link" data-section="miPortal">
+              <i class="fa-solid fa-calendar-check"></i><span class="sidebar-nav__text">Mi asistencia</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="#" class="sidebar-nav__link" data-section="miCalendario">
+              <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario laboral</span>
             </a>
           </li>
         </ul>
@@ -696,6 +724,29 @@
             </div>
           </div>
 
+        </section>
+
+        <!-- ========================================================
+             PORTAL DE USUARIO: asistencia, horario y justificación
+             ======================================================== -->
+        <section id="secMiPortal" class="content-section user-only" aria-label="Mi asistencia">
+          <div class="welcome-user-card">
+            <div><p class="eyebrow">PORTAL DEL COLABORADOR</p><h2 id="userWelcomeTitle">Bienvenido/a</h2><p>Consulta tu jornada, asistencia y solicitudes pendientes.</p></div>
+            <i class="fa-solid fa-id-badge"></i>
+          </div>
+          <div class="stats-grid user-stats">
+            <div class="stat-card"><div class="stat-card__icon stat-card__icon--clientes"><i class="fa-solid fa-user-check"></i></div><div class="stat-card__info"><span class="stat-card__value">18</span><span class="stat-card__label">Días asistidos este mes</span></div></div>
+            <div class="stat-card"><div class="stat-card__icon stat-card__icon--alerta"><i class="fa-solid fa-user-xmark"></i></div><div class="stat-card__info"><span class="stat-card__value">1</span><span class="stat-card__label">Falta pendiente de justificar</span></div></div>
+          </div>
+          <div class="two-column-layout">
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Break</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00</td><td>12:00 – 13:00</td><td>17:00</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de break.</p></div></div>
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form></div></div>
+          </div>
+        </section>
+
+        <!-- Calendario de ejemplo para distinguir descansos, pagos dobles y días laborales. -->
+        <section id="secMiCalendario" class="content-section user-only" aria-label="Calendario laboral">
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario laboral · Agosto 2026</h2></div><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="workCalendar"></div></div></div>
         </section>
 
       </div><!-- fin .content-area -->

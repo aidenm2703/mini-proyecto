@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   let failedAttempts = 0;
   let currentUser = null;
+  let selectedRole = null; // Rol elegido en la primera pantalla de acceso.
   let pendingDelete = null;
   let audioContext;
 
@@ -79,12 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = $('loginPass').value;
     const user = users[username];
 
-    if (user && user.password === password) {
+    // Además de la contraseña, el usuario debe pertenecer al portal seleccionado.
+    if (user && user.password === password && user.role === selectedRole) {
       failedAttempts = 0; // Un acceso correcto reinicia el contador de seguridad.
       currentUser = user;
       updateUserInterface();
       $('loginScreen').style.display = 'none';
       $('dashboardScreen').style.display = 'flex';
+      $('dashboardScreen').classList.toggle('user-session', user.role === 'Usuario');
+      $('dashboardScreen').classList.toggle('admin-session', user.role === 'Admin');
+      changeSection(user.role === 'Usuario' ? 'miPortal' : 'dashboard');
       showToast(`Bienvenido/a, ${user.name}.`);
       return;
     }
@@ -92,13 +97,36 @@ document.addEventListener('DOMContentLoaded', () => {
     failedAttempts += 1;
     const remaining = 3 - failedAttempts;
     $('loginErrorText').textContent = remaining > 0
-      ? `Credenciales incorrectas. Intentos restantes: ${remaining}.`
+      ? `Usuario, contraseña o tipo de acceso incorrecto. Intentos restantes: ${remaining}.`
       : 'Se detectaron tres intentos fallidos.';
     $('loginError').style.display = 'flex';
     $('loginPass').value = '';
     $('loginPass').focus();
 
     if (failedAttempts >= 3) showEmergency();
+  });
+
+  // Los dos botones no inician sesión: solo llevan al formulario del rol seleccionado.
+  document.querySelectorAll('.role-access-btn').forEach((button) => {
+    button.addEventListener('click', () => {
+      selectedRole = button.dataset.role;
+      $('selectedRoleLabel').textContent = `Acceso de ${selectedRole === 'Admin' ? 'Administrador' : 'Usuario'}`;
+      $('roleSelector').style.display = 'none';
+      $('loginHint').style.display = 'none';
+      $('loginForm').style.display = 'block';
+      $('loginError').style.display = 'none';
+      $('loginUser').focus();
+    });
+  });
+
+  // Permite cambiar de portal antes de escribir las credenciales.
+  $('btnBackRoles').addEventListener('click', () => {
+    selectedRole = null;
+    $('loginForm').reset();
+    $('loginForm').style.display = 'none';
+    $('roleSelector').style.display = 'block';
+    $('loginHint').style.display = 'block';
+    $('loginError').style.display = 'none';
   });
 
   // Alterna el tipo del input sin modificar el texto escrito por la persona.
@@ -138,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   function changeSection(section) {
-    const names = { dashboard: 'Dashboard', clientes: 'Clientes', productos: 'Productos', proveedores: 'Proveedores' };
+    const names = { dashboard: 'Dashboard', clientes: 'Clientes', productos: 'Productos', proveedores: 'Proveedores', miPortal: 'Mi asistencia', miCalendario: 'Calendario laboral' };
     document.querySelectorAll('.content-section').forEach((item) => item.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav__link').forEach((item) => item.classList.toggle('active', item.dataset.section === section));
     $(`sec${section[0].toUpperCase()}${section.slice(1)}`).classList.add('active');
@@ -159,6 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
     $('dashboardScreen').style.display = 'none';
     $('loginScreen').style.display = 'flex';
     $('loginForm').reset();
+    selectedRole = null;
+    $('loginForm').style.display = 'none';
+    $('roleSelector').style.display = 'block';
+    $('loginHint').style.display = 'block';
+    $('dashboardScreen').classList.remove('user-session', 'admin-session');
     $('loginError').style.display = 'none';
     changeSection('dashboard');
     showToast('La sesión se cerró correctamente.');
@@ -166,6 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // El botón de notificaciones también es funcional: muestra un mensaje contextual.
   $('btnNotifications').addEventListener('click', () => showToast('Tienes 3 notificaciones: revisa los registros y el inventario.'));
+
+  // Enviar una justificación registra la solicitud de forma visual para la demostración.
+  $('justifyAbsenceForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (!$('absenceReason').value.trim()) return $('absenceReason').reportValidity();
+    event.currentTarget.reset();
+    showToast('Justificación enviada a Recursos Humanos para revisión.');
+  });
 
   /* ----------------------------------------------------------------
      CRUD GENÉRICO: CREAR, LEER, EDITAR Y ELIMINAR
@@ -285,6 +326,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function capitalize(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
   function escapeHtml(value) { const div = document.createElement('div'); div.textContent = value; return div.innerHTML; }
 
+  // Crea agosto de 2026. Sábados y domingos son libres; el 15 se marca como pago doble.
+  function renderWorkCalendar() {
+    const calendar = $('workCalendar');
+    const firstDay = new Date(2026, 7, 1).getDay();
+    const totalDays = 31;
+    const names = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    calendar.innerHTML = names.map((name) => `<div class="calendar-weekday">${name}</div>`).join('')
+      + Array.from({ length: firstDay }, () => '<div class="calendar-day calendar-day--empty"></div>').join('')
+      + Array.from({ length: totalDays }, (_, index) => {
+        const day = index + 1;
+        const weekday = new Date(2026, 7, day).getDay();
+        const free = weekday === 0 || weekday === 6;
+        const doublePay = day === 15;
+        return `<div class="calendar-day ${doublePay ? 'calendar-day--double' : free ? 'calendar-day--free' : 'calendar-day--work'}"><b>${day}</b><small>${doublePay ? 'Pago doble' : free ? 'Libre' : 'Laboral'}</small></div>`;
+      }).join('');
+  }
+
   /* ----------------------------------------------------------------
      FONDO INTERACTIVO
      Partículas enlazadas reaccionan suavemente al puntero del usuario.
@@ -302,5 +360,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   renderEverything();
+  renderWorkCalendar();
   startInteractiveBackground();
 });

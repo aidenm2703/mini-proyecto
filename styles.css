@@ -745,3 +745,27 @@ ANIMACIONES
 
 /* Adaptación para pantallas pequeñas: el menú se abre mediante el botón hamburguesa. */
 @media (max-width: 800px) { .sidebar { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; transform: translateX(-100%); }.sidebar.mobile-open { transform: translateX(0); }.sidebar-overlay { position: fixed; inset: 0; z-index: 15; background: rgba(0,0,0,.5); display: none; }.sidebar-overlay.visible { display: block; }.mobile-menu-btn { display: block; }.main-header { gap: 12px; }.header-user__info { display: none; }.form-grid { grid-template-columns: 1fr; }.form-group--full { grid-column: auto; }.section-toolbar { align-items: stretch; flex-direction: column; }.section-toolbar__search { width: 100%; }.main-content { width: 100%; }.login-box { padding: 28px 22px; } }
+
+/* ==========================================================
+   ACCESO POR ROL Y PORTAL DEL COLABORADOR
+========================================================== */
+
+/* Los botones iniciales eligen un portal, pero no sustituyen la contraseña. */
+.role-selector__text { margin-bottom: 13px; color: var(--text-soft); text-align: center; }
+.role-selector__buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.role-access-btn { display: flex; align-items: center; gap: 11px; min-height: 84px; padding: 13px; border: 1px solid var(--border); border-radius: 14px; color: white; text-align: left; background: rgba(2,6,23,.7); transition: .25s; }
+.role-access-btn:hover { transform: translateY(-3px); border-color: var(--neon-blue); box-shadow: 0 0 20px rgba(0,234,255,.25); }
+.role-access-btn > i { font-size: 1.55rem; }.role-access-btn--admin > i { color: var(--neon-purple); }.role-access-btn--user > i { color: var(--neon-green); }
+.role-access-btn span { display: flex; flex-direction: column; font-weight: 700; }.role-access-btn small { margin-top: 3px; color: var(--text-soft); font-size: .68rem; font-weight: 400; }
+.login-form-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; color: var(--neon-blue); }.btn-back-roles { padding: 5px 0; border: 0; color: var(--text-soft); background: transparent; }.btn-back-roles:hover { color: var(--neon-blue); }
+
+/* Según el rol, se ocultan enlaces y pantallas que no corresponden al usuario. */
+.user-only { display: none; }.user-session .admin-only, .admin-session .user-only { display: none !important; }.user-session .user-only { display: block; }.user-session .sidebar-nav__list .user-only { display: list-item; }
+
+/* Encabezado y tarjetas personales visibles solo en el portal del usuario. */
+.welcome-user-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 27px; border: 1px solid rgba(0,255,153,.3); border-radius: var(--radius); background: linear-gradient(120deg, rgba(0,255,153,.13), rgba(15,23,42,.75)); }.welcome-user-card h2 { margin: 4px 0 8px; }.welcome-user-card p:not(.eyebrow) { color: var(--text-soft); }.welcome-user-card > i { color: var(--neon-green); font-size: 3rem; }.eyebrow { color: var(--neon-green); font-size: .73rem; font-weight: 700; letter-spacing: .12em; }.user-stats { margin-top: 22px; }.two-column-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }.schedule-note, .absence-message { margin: 14px 3px 4px; color: var(--text-soft); font-size: .88rem; }.absence-message strong { color: #ffcf72; }
+
+/* Cuadrícula del calendario. Cada color comunica rápidamente el tipo de día. */
+.calendar-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 14px 0 20px; color: var(--text-soft); font-size: .85rem; }.legend-dot { display: inline-block; width: 9px; height: 9px; margin-right: 4px; border-radius: 50%; }.legend-dot--work { background: var(--neon-blue); }.legend-dot--free { background: #64748b; }.legend-dot--double { background: #ffbf35; }.work-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }.calendar-weekday { padding: 7px 0; color: var(--neon-blue); text-align: center; font-size: .8rem; font-weight: 700; }.calendar-day { display: flex; flex-direction: column; justify-content: space-between; min-height: 75px; padding: 9px; border: 1px solid transparent; border-radius: 10px; }.calendar-day small { margin-top: 7px; font-size: .67rem; }.calendar-day--work { border-color: rgba(0,234,255,.25); background: rgba(0,234,255,.07); }.calendar-day--free { color: #94a3b8; background: rgba(100,116,139,.13); }.calendar-day--double { color: #fff0be; border-color: #ffbf35; background: rgba(255,191,53,.18); box-shadow: 0 0 14px rgba(255,191,53,.15); }
+
+@media (max-width: 800px) { .role-selector__buttons, .two-column-layout { grid-template-columns: 1fr; }.welcome-user-card { align-items: flex-start; }.welcome-user-card > i { font-size: 2rem; }.work-calendar { gap: 4px; }.calendar-day { min-height: 58px; padding: 6px; font-size: .82rem; }.calendar-day small { font-size: .55rem; }.calendar-weekday { font-size: .67rem; } }
