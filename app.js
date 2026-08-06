@@ -175,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.sidebar-nav__link').forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault();
+      if (link.dataset.newTab === 'true') return window.open(link.href, '_blank', 'noopener');
       changeSection(link.dataset.section);
     });
   });
@@ -238,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('notificationDetail').textContent = 'Seleccione una notificación para ver el detalle.';
     $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = visibleNotifications.length;
   }
-  $('btnNotifications').addEventListener('click', (event) => { event.stopPropagation(); const panel = $('notificationPanel'); const open = panel.hidden; panel.hidden = !open; $('btnNotifications').setAttribute('aria-expanded', String(open)); if (open) renderNotifications(); });
+  $('btnNotifications').addEventListener('click', () => window.open('notificaciones.html', '_blank', 'noopener'));
   $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail)}</span>`; });
   $('btnClearNotifications').addEventListener('click', () => { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = '0'; showToast('Notificaciones marcadas como leídas.'); });
   document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
