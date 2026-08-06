@@ -1,0 +1,685 @@
+/* ==========================================================
+   CYBER NEON ADMIN SYSTEM
+   Diseño futurista / Glassmorphism / Neon UI
+========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --bg-main: #050816;
+    --bg-card: rgba(15, 23, 42, .75);
+
+    --neon-blue: #00eaff;
+    --neon-purple: #b026ff;
+    --neon-pink: #ff2bd6;
+    --neon-green: #00ff99;
+    --neon-red: #ff416c;
+
+    --text: #f8fafc;
+    --text-soft: #94a3b8;
+
+    --border: rgba(0,234,255,.25);
+
+    --shadow-blue:
+    0 0 15px rgba(0,234,255,.5),
+    0 0 40px rgba(0,234,255,.2);
+
+    --radius:18px;
+}
+
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Space Grotesk',sans-serif;
+}
+
+
+body{
+
+    min-height:100vh;
+    background:
+    radial-gradient(circle at top left,#0e7490 0%,transparent 30%),
+    radial-gradient(circle at bottom right,#7e22ce 0%,transparent 35%),
+    var(--bg-main);
+
+    color:var(--text);
+}
+
+
+/* ==========================================================
+LOGIN
+========================================================== */
+
+.login-screen{
+
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    position:relative;
+    overflow:hidden;
+
+}
+
+
+.login-bg-grid{
+
+    position:absolute;
+    inset:0;
+
+    background-image:
+    linear-gradient(
+        rgba(0,234,255,.08) 1px,
+        transparent 1px
+    ),
+    linear-gradient(
+        90deg,
+        rgba(0,234,255,.08) 1px,
+        transparent 1px
+    );
+
+    background-size:40px 40px;
+
+}
+
+
+.login-bg-blob{
+
+    position:absolute;
+    border-radius:50%;
+    filter:blur(100px);
+
+}
+
+
+.login-bg-blob--1{
+
+    width:350px;
+    height:350px;
+    background:#00eaff;
+    top:-100px;
+    left:-100px;
+
+}
+
+
+.login-bg-blob--2{
+
+    width:350px;
+    height:350px;
+    background:#b026ff;
+    right:-100px;
+    bottom:-100px;
+
+}
+
+
+
+.login-box{
+
+    width:420px;
+    padding:40px;
+
+    background:
+    rgba(15,23,42,.75);
+
+    backdrop-filter:blur(20px);
+
+    border:1px solid var(--border);
+
+    border-radius:25px;
+
+    box-shadow:var(--shadow-blue);
+
+}
+
+
+.login-logo{
+
+    width:80px;
+    height:80px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    margin:auto;
+
+    border-radius:50%;
+
+    background:
+    linear-gradient(
+    135deg,
+    var(--neon-blue),
+    var(--neon-purple)
+    );
+
+    color:white;
+
+    font-size:35px;
+
+    box-shadow:
+    0 0 25px var(--neon-blue);
+
+}
+
+
+.login-title{
+
+    text-align:center;
+    margin-top:20px;
+    font-size:30px;
+
+    background:
+    linear-gradient(
+    90deg,
+    #fff,
+    var(--neon-blue)
+    );
+
+    -webkit-background-clip:text;
+    color:transparent;
+
+}
+
+
+.login-subtitle{
+
+    text-align:center;
+    color:var(--text-soft);
+    margin:10px 0 30px;
+
+}
+
+
+
+/* ==========================================================
+INPUTS
+========================================================== */
+
+
+.form-input-wrap{
+
+    position:relative;
+
+}
+
+
+.form-input{
+
+    width:100%;
+    padding:15px 45px 15px 15px;
+
+    background:#020617;
+
+    color:white;
+
+    border:1px solid rgba(255,255,255,.15);
+
+    border-radius:12px;
+
+    outline:none;
+
+    transition:.3s;
+
+}
+
+
+.form-input:focus{
+
+    border-color:var(--neon-blue);
+
+    box-shadow:
+    0 0 15px rgba(0,234,255,.5);
+
+}
+
+
+
+.form-input-wrap i{
+
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+
+    color:var(--neon-blue);
+
+}
+
+
+
+
+/* ==========================================================
+BUTTONS
+========================================================== */
+
+
+button{
+
+    cursor:pointer;
+}
+
+
+.btn-login,
+.btn-action--primary{
+
+
+    background:
+    linear-gradient(
+    90deg,
+    var(--neon-blue),
+    var(--neon-purple)
+    );
+
+
+    border:none;
+
+    color:white;
+
+    padding:15px;
+
+    border-radius:12px;
+
+    font-weight:700;
+
+    transition:.3s;
+
+}
+
+
+
+.btn-login:hover,
+.btn-action--primary:hover{
+
+
+    transform:translateY(-3px);
+
+    box-shadow:
+    0 0 25px var(--neon-blue);
+
+}
+
+
+
+
+/* ==========================================================
+DASHBOARD
+========================================================== */
+
+
+.dashboard-screen{
+
+    display:flex;
+
+}
+
+
+
+/* SIDEBAR */
+
+
+.sidebar{
+
+    width:270px;
+
+    min-height:100vh;
+
+    background:
+
+    rgba(2,6,23,.85);
+
+    backdrop-filter:blur(20px);
+
+    border-right:1px solid var(--border);
+
+    padding:25px;
+
+}
+
+
+
+.sidebar-brand{
+
+    display:flex;
+    gap:15px;
+    align-items:center;
+
+    font-size:24px;
+    font-weight:bold;
+
+    color:var(--neon-blue);
+
+}
+
+
+.sidebar-nav{
+
+    margin-top:40px;
+
+}
+
+
+.sidebar-nav__link{
+
+    display:flex;
+
+    gap:15px;
+
+    padding:15px;
+
+    margin:10px 0;
+
+    color:#cbd5e1;
+
+    text-decoration:none;
+
+    border-radius:12px;
+
+    transition:.3s;
+
+}
+
+
+.sidebar-nav__link:hover,
+.sidebar-nav__link.active{
+
+
+    background:
+
+    rgba(0,234,255,.12);
+
+    color:white;
+
+    box-shadow:
+    inset 0 0 15px rgba(0,234,255,.3);
+
+}
+
+
+
+/* ==========================================================
+MAIN
+========================================================== */
+
+
+.main-content{
+
+    flex:1;
+
+    padding:30px;
+
+}
+
+
+
+.main-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:30px;
+
+}
+
+
+
+.main-header h1{
+
+    font-size:32px;
+
+}
+
+
+
+.main-header p{
+
+    color:var(--text-soft);
+
+}
+
+
+
+/* ==========================================================
+CARDS
+========================================================== */
+
+
+.stats-grid{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(220px,1fr));
+
+    gap:25px;
+
+}
+
+
+
+.stat-card,
+.panel{
+
+
+    background:
+
+    rgba(15,23,42,.75);
+
+
+    backdrop-filter:blur(15px);
+
+
+    border:
+
+    1px solid rgba(0,234,255,.2);
+
+
+    border-radius:var(--radius);
+
+
+    box-shadow:
+
+    0 0 25px rgba(0,0,0,.4);
+
+
+    transition:.3s;
+
+
+}
+
+
+
+.stat-card:hover,
+.panel:hover{
+
+
+    transform:translateY(-8px);
+
+
+    box-shadow:
+
+    0 0 30px rgba(0,234,255,.35);
+
+
+}
+
+
+
+.stat-card{
+
+    padding:25px;
+
+    display:flex;
+
+    gap:20px;
+
+}
+
+
+
+.stat-card__value{
+
+
+    font-size:35px;
+
+    color:var(--neon-blue);
+
+    font-weight:bold;
+
+}
+
+
+.stat-card__label{
+
+    color:#94a3b8;
+
+}
+
+
+
+/* ==========================================================
+TABLES
+========================================================== */
+
+
+.data-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+}
+
+
+.data-table th{
+
+    color:var(--neon-blue);
+
+    padding:15px;
+
+    text-align:left;
+
+}
+
+
+
+.data-table td{
+
+    padding:15px;
+
+    border-bottom:
+    1px solid rgba(255,255,255,.08);
+
+}
+
+
+.data-table tr:hover{
+
+    background:
+    rgba(0,234,255,.08);
+
+}
+
+
+
+
+/* ==========================================================
+MODAL
+========================================================== */
+
+
+.modal-overlay{
+
+    position:fixed;
+
+    inset:0;
+
+    background:
+    rgba(0,0,0,.75);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+}
+
+
+
+.modal-box{
+
+    background:#020617;
+
+    padding:35px;
+
+    border-radius:20px;
+
+    border:1px solid var(--neon-red);
+
+    box-shadow:
+    0 0 40px rgba(255,65,108,.5);
+
+}
+
+
+
+/* ==========================================================
+ANIMACIONES
+========================================================== */
+
+
+@keyframes pulse{
+
+    0%,100%{
+        opacity:1;
+    }
+
+    50%{
+        opacity:.6;
+    }
+
+}
+
+
+.login-logo{
+
+    animation:pulse 3s infinite;
+
+}
+
+
+
+/* RESPONSIVE */
+
+@media(max-width:800px){
+
+.sidebar{
+
+    position:absolute;
+
+    left:-300px;
+
+}
+
+.main-content{
+
+    padding:15px;
+
+}
+
+
+.login-box{
+
+    width:90%;
+
+}
+
+}

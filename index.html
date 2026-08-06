@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema Administrativo Web</title>
+
+  <!-- Fuentes de Google -->
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Iconos Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Estilos del equipo -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ================================================================
+       PANTALLA DE LOGIN
+       Se muestra al cargar. Se oculta tras autenticación exitosa.
+       ================================================================ -->
+  <div id="loginScreen" class="login-screen">
+
+    <!-- Fondo decorativo del login -->
+    <div class="login-bg-grid"></div>
+    <div class="login-bg-blob login-bg-blob--1"></div>
+    <div class="login-bg-blob login-bg-blob--2"></div>
+
+    <div class="login-container">
+      <div class="login-box">
+
+        <!-- Logo del login -->
+        <div class="login-logo">
+          <i class="fa-solid fa-cube"></i>
+        </div>
+
+        <h1 class="login-title">Sistema Administrativo</h1>
+        <p class="login-subtitle">Ingrese sus credenciales para acceder al sistema</p>
+
+        <!-- Mensaje de error del login -->
+        <div id="loginError" class="login-error" style="display:none;" role="alert">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span id="loginErrorText">Credenciales incorrectas</span>
+        </div>
+
+        <!-- Formulario de login -->
+        <form id="loginForm" novalidate>
+          <div class="form-group">
+            <label for="loginUser">Usuario</label>
+            <div class="form-input-wrap">
+              <input
+                type="text"
+                id="loginUser"
+                class="form-input"
+                placeholder="Ingrese su usuario"
+                autocomplete="username"
+                required
+              >
+              <i class="fa-solid fa-user"></i>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="loginPass">Contraseña</label>
+            <div class="form-input-wrap">
+              <input
+                type="password"
+                id="loginPass"
+                class="form-input"
+                placeholder="Ingrese su contraseña"
+                autocomplete="current-password"
+                required
+              >
+              <i class="fa-solid fa-lock"></i>
+              <button type="button" id="btnTogglePass" class="btn-toggle-pass" aria-label="Mostrar contraseña">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-login">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            Iniciar sesión
+          </button>
+        </form>
+
+        <!-- Credenciales de prueba -->
+        <div class="login-hint">
+          <div class="login-hint__title">
+            <i class="fa-solid fa-circle-info"></i>
+            Credenciales de prueba
+          </div>
+          <table class="login-hint__table">
+            <tr>
+              <td>admin / admin123</td>
+              <td><span class="role-dot role-dot--admin"></span>Administrador</td>
+            </tr>
+            <tr>
+              <td>usuario1 / pass123</td>
+              <td><span class="role-dot role-dot--user"></span>Usuario</td>
+            </tr>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       PANTALLA PRINCIPAL DEL DASHBOARD
+       Se muestra tras login exitoso. Contiene sidebar + contenido.
+       ================================================================ -->
+  <div id="dashboardScreen" class="dashboard-screen" style="display:none;">
+
+    <!-- ============================================================
+         SIDEBAR — Menú lateral de navegación
+         ============================================================ -->
+    <aside id="sidebar" class="sidebar" role="navigation" aria-label="Menú principal">
+
+      <!-- Botón para colapsar sidebar en desktop -->
+      <button id="sidebarToggle" class="sidebar-toggle" aria-label="Colapsar menú">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <!-- Logo/Marca del sidebar -->
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-cube"></i>
+        <span class="sidebar-brand__text">AdminSystem</span>
+      </div>
+
+      <!-- Enlaces de navegación -->
+      <nav class="sidebar-nav">
+        <ul class="sidebar-nav__list">
+          <li>
+            <a href="#" class="sidebar-nav__link active" data-section="dashboard">
+              <i class="fa-solid fa-gauge-high"></i>
+              <span class="sidebar-nav__text">Dashboard</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-nav__link" data-section="clientes">
+              <i class="fa-solid fa-users"></i>
+              <span class="sidebar-nav__text">Clientes</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-nav__link" data-section="productos">
+              <i class="fa-solid fa-box"></i>
+              <span class="sidebar-nav__text">Productos</span>
+            </a>
+          </li>
+          <li>
+            <a href="#" class="sidebar-nav__link" data-section="proveedores">
+              <i class="fa-solid fa-truck"></i>
+              <span class="sidebar-nav__text">Proveedores</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Separador -->
+      <div class="sidebar-divider"></div>
+
+      <!-- Info del usuario en la parte inferior del sidebar -->
+      <div class="sidebar-user">
+        <div class="sidebar-user__avatar" id="sidebarAvatar">A</div>
+        <div class="sidebar-user__info">
+          <div class="sidebar-user__name" id="sidebarUserName">Administrador</div>
+          <div class="sidebar-user__role" id="sidebarUserRole">Admin</div>
+        </div>
+      </div>
+
+      <!-- Botón cerrar sesión en sidebar -->
+      <button id="btnSidebarLogout" class="sidebar-logout" aria-label="Cerrar sesión">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+        <span class="sidebar-nav__text">Cerrar sesión</span>
+      </button>
+    </aside>
+
+    <!-- Overlay para móvil al abrir sidebar -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+
+    <!-- ============================================================
+         CONTENIDO PRINCIPAL — Header + Área de trabajo
+         ============================================================ -->
+    <main id="mainContent" class="main-content">
+
+      <!-- HEADER superior -->
+      <header class="main-header">
+        <!-- Botón hamburguesa solo visible en móvil -->
+        <button id="mobileMenuBtn" class="mobile-menu-btn" aria-label="Abrir menú">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Título de la página actual -->
+        <div class="main-header__title">
+          <h1 id="pageTitle">Dashboard</h1>
+          <p id="pageBreadcrumb">Inicio / Dashboard</p>
+        </div>
+
+        <!-- Acciones del header -->
+        <div class="main-header__actions">
+          <!-- Notificaciones (decorativo pero funcional para la UI) -->
+          <button class="header-icon-btn" aria-label="Notificaciones">
+            <i class="fa-solid fa-bell"></i>
+            <span class="header-icon-btn__badge">3</span>
+          </button>
+
+          <!-- Info del usuario en el header -->
+          <div class="header-user">
+            <div class="header-user__avatar" id="headerAvatar">A</div>
+            <div class="header-user__info">
+              <span class="header-user__name" id="headerUserName">Administrador</span>
+              <span class="header-user__role" id="headerUserRole">Admin</span>
+            </div>
+          </div>
+
+          <!-- Botón logout en header -->
+          <button id="btnHeaderLogout" class="btn-header-logout" aria-label="Cerrar sesión">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+      </header>
+
+
+      <!-- ==========================================================
+           ÁREA DE TRABAJO — Aquí van todas las secciones
+           ========================================================== -->
+      <div class="content-area" id="contentArea">
+
+
+        <!-- ========================================================
+             SECCIÓN: DASHBOARD (Resumen general)
+             ======================================================== -->
+        <section id="secDashboard" class="content-section active" aria-label="Dashboard">
+
+          <!-- Tarjetas de resumen -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--clientes">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <div class="stat-card__info">
+                <span class="stat-card__value" id="statTotalClientes">0</span>
+                <span class="stat-card__label">Clientes registrados</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--productos">
+                <i class="fa-solid fa-box"></i>
+              </div>
+              <div class="stat-card__info">
+                <span class="stat-card__value" id="statTotalProductos">0</span>
+                <span class="stat-card__label">Productos en inventario</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--proveedores">
+                <i class="fa-solid fa-truck"></i>
+              </div>
+              <div class="stat-card__info">
+                <span class="stat-card__value" id="statTotalProveedores">0</span>
+                <span class="stat-card__label">Proveedores activos</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-card__icon stat-card__icon--alerta">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div class="stat-card__info">
+                <span class="stat-card__value" id="statBajoStock">0</span>
+                <span class="stat-card__label">Productos bajo stock</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de últimos registros -->
+          <div class="panel">
+            <div class="panel__header">
+              <h2 class="panel__title">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                Últimos registros agregados
+              </h2>
+            </div>
+            <div class="panel__body">
+              <div style="overflow-x:auto;">
+                <table class="data-table" id="tablaUltimosRegistros">
+                  <thead>
+                    <tr>
+                      <th>Tipo</th>
+                      <th>Nombre</th>
+                      <th>Fecha</th>
+                      <th>Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyUltimos">
+                    <!-- Se llena dinámicamente con JS -->
+                    <tr class="empty-row">
+                      <td colspan="4">No hay registros aún</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             SECCIÓN: CLIENTES — CRUD completo
+             ======================================================== -->
+        <section id="secClientes" class="content-section" aria-label="Administración de clientes">
+
+          <!-- Barra de acciones superior -->
+          <div class="section-toolbar">
+            <div class="section-toolbar__search">
+              <div class="form-input-wrap">
+                <input
+                  type="text"
+                  id="searchClientes"
+                  class="form-input form-input--search"
+                  placeholder="Buscar cliente por nombre o cédula..."
+                >
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+            </div>
+            <button class="btn-action btn-action--primary" id="btnNuevoCliente">
+              <i class="fa-solid fa-plus"></i>
+              Nuevo cliente
+            </button>
+          </div>
+
+          <!-- Formulario de clientes (oculto por defecto) -->
+          <div id="formClientes" class="form-panel" style="display:none;">
+            <div class="form-panel__header">
+              <h3 id="formClientesTitle" class="form-panel__title">Registrar cliente</h3>
+              <button class="btn-icon" id="btnCerrarFormClientes" aria-label="Cerrar formulario">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <form id="clienteForm" novalidate>
+              <!-- Campo oculto para saber si se edita o crea -->
+              <input type="hidden" id="clienteId" value="">
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="clienteNombre">Nombre completo <span class="required">*</span></label>
+                  <input type="text" id="clienteNombre" class="form-input" placeholder="Ej: María García López" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="clienteCedula">Cédula <span class="required">*</span></label>
+                  <input type="text" id="clienteCedula" class="form-input" placeholder="Ej: 1-2345-6789" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="clienteEmail">Correo electrónico <span class="required">*</span></label>
+                  <input type="email" id="clienteEmail" class="form-input" placeholder="Ej: maria@correo.com" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="clienteTelefono">Teléfono <span class="required">*</span></label>
+                  <input type="tel" id="clienteTelefono" class="form-input" placeholder="Ej: 8888-9999" required>
+                </div>
+
+                <div class="form-group form-group--full">
+                  <label for="clienteDireccion">Dirección <span class="required">*</span></label>
+                  <input type="text" id="clienteDireccion" class="form-input" placeholder="Ej: San José, Costa Rica" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="clienteEstado">Estado</label>
+                  <select id="clienteEstado" class="form-select">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-panel__actions">
+                <button type="submit" class="btn-action btn-action--primary">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Guardar
+                </button>
+                <button type="button" class="btn-action btn-action--secondary" id="btnCancelarCliente">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de clientes -->
+          <div class="panel">
+            <div class="panel__header">
+              <h2 class="panel__title">
+                <i class="fa-solid fa-users"></i>
+                Lista de clientes
+              </h2>
+              <span class="panel__count" id="countClientes">0 registros</span>
+            </div>
+            <div class="panel__body">
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Cédula</th>
+                      <th>Email</th>
+                      <th>Teléfono</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyClientes">
+                    <tr class="empty-row">
+                      <td colspan="6">No hay clientes registrados</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             SECCIÓN: PRODUCTOS — CRUD completo
+             ======================================================== -->
+        <section id="secProductos" class="content-section" aria-label="Administración de productos">
+
+          <!-- Barra de acciones superior -->
+          <div class="section-toolbar">
+            <div class="section-toolbar__search">
+              <div class="form-input-wrap">
+                <input
+                  type="text"
+                  id="searchProductos"
+                  class="form-input form-input--search"
+                  placeholder="Buscar producto por nombre o código..."
+                >
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+            </div>
+            <button class="btn-action btn-action--primary" id="btnNuevoProducto">
+              <i class="fa-solid fa-plus"></i>
+              Nuevo producto
+            </button>
+          </div>
+
+          <!-- Formulario de productos (oculto por defecto) -->
+          <div id="formProductos" class="form-panel" style="display:none;">
+            <div class="form-panel__header">
+              <h3 id="formProductosTitle" class="form-panel__title">Registrar producto</h3>
+              <button class="btn-icon" id="btnCerrarFormProductos" aria-label="Cerrar formulario">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <form id="productoForm" novalidate>
+              <input type="hidden" id="productoId" value="">
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="productoNombre">Nombre del producto <span class="required">*</span></label>
+                  <input type="text" id="productoNombre" class="form-input" placeholder="Ej: Monitor LED 24 pulgadas" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="productoCodigo">Código / SKU <span class="required">*</span></label>
+                  <input type="text" id="productoCodigo" class="form-input" placeholder="Ej: MON-LED-024" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="productoCategoria">Categoría <span class="required">*</span></label>
+                  <select id="productoCategoria" class="form-select" required>
+                    <option value="">Seleccione una categoría</option>
+                    <option value="electronicos">Electrónicos</option>
+                    <option value="oficina">Oficina</option>
+                    <option value="mobiliario">Mobiliario</option>
+                    <option value="insumos">Insumos</option>
+                    <option value="otros">Otros</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="productoPrecio">Precio (colones) <span class="required">*</span></label>
+                  <input type="number" id="productoPrecio" class="form-input" placeholder="Ej: 150000" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="productoStock">Stock (unidades) <span class="required">*</span></label>
+                  <input type="number" id="productoStock" class="form-input" placeholder="Ej: 50" min="0" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="productoEstado">Estado</label>
+                  <select id="productoEstado" class="form-select">
+                    <option value="disponible">Disponible</option>
+                    <option value="agotado">Agotado</option>
+                    <option value="descontinuado">Descontinuado</option>
+                  </select>
+                </div>
+
+                <div class="form-group form-group--full">
+                  <label for="productoDescripcion">Descripción</label>
+                  <textarea id="productoDescripcion" class="form-input form-textarea" rows="3" placeholder="Descripción del producto..."></textarea>
+                </div>
+              </div>
+
+              <div class="form-panel__actions">
+                <button type="submit" class="btn-action btn-action--primary">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Guardar
+                </button>
+                <button type="button" class="btn-action btn-action--secondary" id="btnCancelarProducto">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de productos -->
+          <div class="panel">
+            <div class="panel__header">
+              <h2 class="panel__title">
+                <i class="fa-solid fa-box"></i>
+                Lista de productos
+              </h2>
+              <span class="panel__count" id="countProductos">0 registros</span>
+            </div>
+            <div class="panel__body">
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th>Código</th>
+                      <th>Categoría</th>
+                      <th>Precio</th>
+                      <th>Stock</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyProductos">
+                    <tr class="empty-row">
+                      <td colspan="7">No hay productos registrados</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ========================================================
+             SECCIÓN: PROVEEDORES — CRUD completo
+             ======================================================== -->
+        <section id="secProveedores" class="content-section" aria-label="Administración de proveedores">
+
+          <!-- Barra de acciones superior -->
+          <div class="section-toolbar">
+            <div class="section-toolbar__search">
+              <div class="form-input-wrap">
+                <input
+                  type="text"
+                  id="searchProveedores"
+                  class="form-input form-input--search"
+                  placeholder="Buscar proveedor por nombre o cédula..."
+                >
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </div>
+            </div>
+            <button class="btn-action btn-action--primary" id="btnNuevoProveedor">
+              <i class="fa-solid fa-plus"></i>
+              Nuevo proveedor
+            </button>
+          </div>
+
+          <!-- Formulario de proveedores (oculto por defecto) -->
+          <div id="formProveedores" class="form-panel" style="display:none;">
+            <div class="form-panel__header">
+              <h3 id="formProveedoresTitle" class="form-panel__title">Registrar proveedor</h3>
+              <button class="btn-icon" id="btnCerrarFormProveedores" aria-label="Cerrar formulario">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+            <form id="proveedorForm" novalidate>
+              <input type="hidden" id="proveedorId" value="">
+
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="proveedorNombre">Razón social / Nombre <span class="required">*</span></label>
+                  <input type="text" id="proveedorNombre" class="form-input" placeholder="Ej: TechSupply S.A." required>
+                </div>
+
+                <div class="form-group">
+                  <label for="proveedorCedula">Cédula jurídica <span class="required">*</span></label>
+                  <input type="text" id="proveedorCedula" class="form-input" placeholder="Ej: 3-101-123456" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="proveedorTelefono">Teléfono <span class="required">*</span></label>
+                  <input type="tel" id="proveedorTelefono" class="form-input" placeholder="Ej: 2222-3333" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="proveedorEmail">Correo electrónico <span class="required">*</span></label>
+                  <input type="email" id="proveedorEmail" class="form-input" placeholder="Ej: ventas@techsupply.cr" required>
+                </div>
+
+                <div class="form-group form-group--full">
+                  <label for="proveedorDireccion">Dirección <span class="required">*</span></label>
+                  <input type="text" id="proveedorDireccion" class="form-input" placeholder="Ej: Heredia, Costa Rica" required>
+                </div>
+
+                <div class="form-group">
+                  <label for="proveedorCategoria">Categoría <span class="required">*</span></label>
+                  <select id="proveedorCategoria" class="form-select" required>
+                    <option value="">Seleccione una categoría</option>
+                    <option value="tecnologia">Tecnología</option>
+                    <option value="suministros">Suministros</option>
+                    <option value="servicios">Servicios</option>
+                    <option value="logistica">Logística</option>
+                    <option value="otros">Otros</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label for="proveedorEstado">Estado</label>
+                  <select id="proveedorEstado" class="form-select">
+                    <option value="activo">Activo</option>
+                    <option value="inactivo">Inactivo</option>
+                  </select>
+                </div>
+
+                <div class="form-group form-group--full">
+                  <label for="proveedorContacto">Persona de contacto</label>
+                  <input type="text" id="proveedorContacto" class="form-input" placeholder="Ej: Juan Pérez — Gerente de ventas">
+                </div>
+              </div>
+
+              <div class="form-panel__actions">
+                <button type="submit" class="btn-action btn-action--primary">
+                  <i class="fa-solid fa-floppy-disk"></i>
+                  Guardar
+                </button>
+                <button type="button" class="btn-action btn-action--secondary" id="btnCancelarProveedor">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabla de proveedores -->
+          <div class="panel">
+            <div class="panel__header">
+              <h2 class="panel__title">
+                <i class="fa-solid fa-truck"></i>
+                Lista de proveedores
+              </h2>
+              <span class="panel__count" id="countProveedores">0 registros</span>
+            </div>
+            <div class="panel__body">
+              <div style="overflow-x:auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Razón social</th>
+                      <th>Cédula jurídica</th>
+                      <th>Teléfono</th>
+                      <th>Email</th>
+                      <th>Categoría</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyProveedores">
+                    <tr class="empty-row">
+                      <td colspan="7">No hay proveedores registrados</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div><!-- fin .content-area -->
+    </main><!-- fin .main-content -->
+  </div><!-- fin .dashboard-screen -->
+
+
+  <!-- ================================================================
+       MODAL DE CONFIRMACIÓN (para eliminar registros)
+       ================================================================ -->
+  <div id="confirmModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-box__icon modal-box__icon--danger">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3 class="modal-box__title">Confirmar eliminación</h3>
+      <p class="modal-box__text" id="confirmModalText">
+        ¿Está seguro de que desea eliminar este registro? Esta acción no se puede deshacer.
+      </p>
+      <div class="modal-box__actions">
+        <button class="btn-action btn-action--danger" id="btnConfirmDelete">
+          <i class="fa-solid fa-trash"></i>
+          Eliminar
+        </button>
+        <button class="btn-action btn-action--secondary" id="btnCancelDelete">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ================================================================
+       TOAST DE NOTIFICACIONES (éxito y error)
+       ================================================================ -->
+  <div id="toast" class="toast" role="alert" aria-live="polite">
+    <i id="toastIcon" class="fa-solid fa-circle-check"></i>
+    <span id="toastMessage">Operación exitosa</span>
+  </div>
+
+
+  <!-- Lógica JavaScript del equipo -->
+  <script src="app.js"></script>
+</body>
+</html>
