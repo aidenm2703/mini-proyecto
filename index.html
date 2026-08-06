@@ -34,7 +34,7 @@
 
         <!-- Logo del login -->
         <div class="login-logo">
-          <i class="fa-solid fa-cube"></i>
+          <i class="fa-solid fa-code-branch"></i>
         </div>
 
         <h1 class="login-title">Bienvenido al sistema de login</h1>
@@ -152,7 +152,7 @@
 
       <!-- Logo/Marca del sidebar -->
       <div class="sidebar-brand">
-        <i class="fa-solid fa-cube"></i>
+        <i class="fa-solid fa-code-branch"></i>
         <span class="sidebar-brand__text">AdminSystem</span>
       </div>
 
@@ -261,10 +261,20 @@
         <!-- Acciones del header -->
         <div class="main-header__actions">
           <!-- Notificaciones (decorativo pero funcional para la UI) -->
-          <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones">
+          <div class="header-tools">
+          <button id="btnTheme" class="header-icon-btn" aria-label="Cambiar modo de color" title="Cambiar modo de color"><i class="fa-solid fa-moon"></i></button>
+          <label class="language-picker" for="languageSelect" title="Cambiar idioma"><i class="fa-solid fa-language"></i><select id="languageSelect" aria-label="Cambiar idioma"><option value="es">ES</option><option value="en">EN</option><option value="pt">PT</option><option value="it">IT</option><option value="fr">FR</option></select></label>
+          <div class="notification-wrap">
+          <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones" aria-expanded="false">
             <i class="fa-solid fa-bell"></i>
             <span class="header-icon-btn__badge">3</span>
           </button>
+          <div id="notificationPanel" class="notification-panel" hidden>
+            <div class="notification-panel__header"><strong>Notificaciones</strong><button id="btnClearNotifications" type="button">Marcar leídas</button></div>
+            <div id="notificationList" class="notification-list"></div>
+          </div>
+          </div>
+          </div>
 
           <!-- Info del usuario en el header -->
           <div class="header-user">
@@ -784,12 +794,12 @@
           </div>
           <div class="panel warning-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-triangle-exclamation"></i> Mis amonestaciones</h2><span class="badge badge--warning">1 activa</span></div><div class="panel__body"><p><strong>Usted tiene una amonestación:</strong> por faltar dos días sin justificarse. Comuníquese con Recursos Humanos si necesita presentar un respaldo.</p></div></div>
           <!-- Marcación diaria: cada acción guarda su hora para calcular trabajo y extras. -->
-          <div class="panel attendance-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-stopwatch"></i> Mi asistencia de hoy</h2><span id="attendanceState" class="badge badge--inactive">Sin marcar</span></div><div class="panel__body"><div class="attendance-actions"><button id="btnCheckIn" class="btn-action btn-action--primary"><i class="fa-solid fa-right-to-bracket"></i> Marcar entrada</button><button id="btnBreakStart" class="btn-action btn-action--secondary"><i class="fa-solid fa-mug-hot"></i> Iniciar break</button><button id="btnBreakEnd" class="btn-action btn-action--secondary"><i class="fa-solid fa-play"></i> Terminar break</button><button id="btnCheckOut" class="btn-action btn-action--danger"><i class="fa-solid fa-right-from-bracket"></i> Marcar salida</button></div><div id="attendanceTimes" class="attendance-times">Aún no has realizado una marcación hoy.</div></div></div>
+          <div class="panel attendance-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-stopwatch"></i> Mi asistencia de hoy</h2><span id="attendanceState" class="badge badge--inactive">Sin marcar</span></div><div class="panel__body"><div class="attendance-actions"><button id="btnCheckIn" class="btn-action btn-action--primary"><i class="fa-solid fa-right-to-bracket"></i> Marcar entrada</button><button id="btnBreakStart" class="btn-action btn-action--secondary"><i class="fa-solid fa-utensils"></i> Iniciar almuerzo</button><button id="btnBreakEnd" class="btn-action btn-action--secondary"><i class="fa-solid fa-play"></i> Terminar almuerzo</button><button id="btnCheckOut" class="btn-action btn-action--danger"><i class="fa-solid fa-right-from-bracket"></i> Marcar salida</button></div><div id="attendanceTimes" class="attendance-times">Aún no has realizado una marcación hoy.</div></div></div>
           <!-- Tareas asignadas al usuario para la jornada actual. -->
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Tareas del día</h2><span class="panel__count">Actualiza tu avance</span></div><div class="panel__body"><div id="todayTasks" class="today-tasks"></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-pen"></i> Reporte de jornada</h2></div><div class="panel__body"><form id="dailyReportForm" class="daily-report"><label for="dailyReportText">Reporte de lo realizado hoy</label><textarea id="dailyReportText" class="form-input form-textarea" required placeholder="Cuente qué realizó durante la jornada..."></textarea><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar reporte</button><p id="dailyReportStatus" class="justification-status">Aún no ha enviado su reporte.</p></form></div></div>
           <div class="two-column-layout">
-            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Break</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00</td><td>12:00 – 13:00</td><td>17:00</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de break.</p></div></div>
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Almuerzo</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00 AM</td><td>12:00 PM – 01:00 PM</td><td>05:00 PM</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de almuerzo.</p></div></div>
             <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><input id="absenceProof" class="form-input file-input" type="file" accept="image/*"></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
           </div>
         </section>
@@ -802,6 +812,11 @@
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario laboral · Agosto 2026</h2></div><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="workCalendar"></div></div></div>
         </section>
 
+        <footer class="company-footer" aria-label="Identidad de AAA Software">
+          <article><i class="fa-solid fa-bullseye"></i><div><h3>Misión</h3><p>Crear software confiable que simplifique el trabajo y ayude a crecer a nuestros clientes.</p></div></article>
+          <article><i class="fa-solid fa-compass"></i><div><h3>Visión</h3><p>Ser un aliado tecnológico referente en Costa Rica y Latinoamérica.</p></div></article>
+          <article><i class="fa-solid fa-code"></i><div><h3>Valores</h3><p>Innovación responsable, colaboración, calidad y cercanía con las personas.</p></div></article>
+        </footer>
       </div><!-- fin .content-area -->
     </main><!-- fin .main-content -->
   </div><!-- fin .dashboard-screen -->

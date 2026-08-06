@@ -197,8 +197,16 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.survey-admin-results')?.classList.toggle('visible', section === 'encuestas');
     $('pageTitle').textContent = names[section];
     $('pageBreadcrumb').textContent = `Inicio / ${names[section]}`;
+    if (window.location.hash !== `#${section}`) window.history.replaceState(null, '', `#${section}`);
+    $('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
     closeMobileMenu();
   }
+
+  window.addEventListener('hashchange', () => {
+    const section = window.location.hash.slice(1);
+    const target = $(`sec${section[0]?.toUpperCase() || ''}${section.slice(1)}`);
+    if (target && !(currentUser?.role === 'Admin' && target.classList.contains('user-only')) && !(currentUser?.role === 'Usuario' && target.classList.contains('admin-only'))) changeSection(section);
+  });
 
   $('sidebarToggle').addEventListener('click', () => $('sidebar').classList.toggle('collapsed'));
   $('mobileMenuBtn').addEventListener('click', () => { $('sidebar').classList.add('mobile-open'); $('sidebarOverlay').classList.add('visible'); });
@@ -222,8 +230,44 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('La sesión se cerró correctamente.');
   }
 
-  // El botón de notificaciones también es funcional: muestra un mensaje contextual.
-  $('btnNotifications').addEventListener('click', () => showToast('Tienes 3 notificaciones: revisa los registros y el inventario.'));
+  const notifications = [
+    { icon: 'fa-list-check', title: 'Tareas pendientes', text: 'Revisa las tareas asignadas al personal.', time: 'Ahora' },
+    { icon: 'fa-boxes-stacked', title: 'Inventario', text: 'Hay productos con stock bajo.', time: 'Hoy' },
+    { icon: 'fa-shield-halved', title: 'Seguridad', text: 'El acceso está protegido y monitoreado.', time: 'Hoy' }
+  ];
+  function renderNotifications() {
+    const alerts = JSON.parse(localStorage.getItem(securityStorage || 'aaa_security_alerts') || '[]');
+    const items = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
+    const list = [...items, ...notifications];
+    $('notificationList').innerHTML = list.map((notice) => `<button type="button" class="notification-item"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
+    $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = list.length;
+  }
+  $('btnNotifications').addEventListener('click', (event) => { event.stopPropagation(); const panel = $('notificationPanel'); const open = panel.hidden; panel.hidden = !open; $('btnNotifications').setAttribute('aria-expanded', String(open)); if (open) renderNotifications(); });
+  $('btnClearNotifications').addEventListener('click', () => { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = '0'; showToast('Notificaciones marcadas como leídas.'); });
+  document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
+
+  const languageNames = { es: 'Español', en: 'English', pt: 'Português', it: 'Italiano', fr: 'Français' };
+  const languageText = {
+    es: ['Dashboard', 'Clientes', 'Productos', 'Proveedores', 'Encuestas', 'Trazabilidad', 'Empleados y tareas', 'Mi asistencia', 'Calendario laboral', 'Mi encuesta'],
+    en: ['Dashboard', 'Clients', 'Products', 'Suppliers', 'Surveys', 'Traceability', 'Employees & tasks', 'My attendance', 'Work calendar', 'My survey'],
+    pt: ['Painel', 'Clientes', 'Produtos', 'Fornecedores', 'Pesquisas', 'Rastreabilidade', 'Funcionários e tarefas', 'Minha presença', 'Calendário de trabalho', 'Minha pesquisa'],
+    it: ['Pannello', 'Clienti', 'Prodotti', 'Fornitori', 'Sondaggi', 'Tracciabilità', 'Dipendenti e attività', 'La mia presenza', 'Calendario di lavoro', 'Il mio sondaggio'],
+    fr: ['Tableau de bord', 'Clients', 'Produits', 'Fournisseurs', 'Enquêtes', 'Traçabilité', 'Employés et tâches', 'Ma présence', 'Calendrier de travail', 'Mon enquête']
+  };
+  function setLanguage(language) {
+    document.documentElement.lang = language;
+    document.querySelectorAll('.sidebar-nav__text').forEach((node, index) => { if (languageText[language][index]) node.textContent = languageText[language][index]; });
+    localStorage.setItem('aaa_language', language);
+    $('languageSelect').value = language;
+    showToast(`Idioma cambiado a ${languageNames[language]}.`);
+  }
+  $('languageSelect').addEventListener('change', (event) => setLanguage(event.target.value));
+  $('languageSelect').value = localStorage.getItem('aaa_language') || 'es';
+  if ($('languageSelect').value !== 'es') setLanguage($('languageSelect').value);
+
+  function setTheme(theme) { document.body.classList.toggle('light-theme', theme === 'light'); $('btnTheme').innerHTML = `<i class="fa-solid fa-${theme === 'light' ? 'sun' : 'moon'}"></i>`; localStorage.setItem('aaa_theme', theme); }
+  $('btnTheme').addEventListener('click', () => setTheme(document.body.classList.contains('light-theme') ? 'dark' : 'light'));
+  setTheme(localStorage.getItem('aaa_theme') || 'dark');
 
   // Una justificación con foto se aprueba; sin comprobante se niega a los 15 segundos.
   $('justifyAbsenceForm').addEventListener('submit', (event) => {
@@ -259,12 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function markAttendance(action) {
     const record = getAttendance();
     if (record[action]) return showToast('Esta acción ya fue registrada hoy.', true);
-    record[action] = new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' });
+    record[action] = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     record[`${action}Stamp`] = Date.now();
     saveAttendance(record);
     showToast(`Hora de ${attendanceLabels[action]} registrada: ${record[action]}.`);
   }
-  const attendanceLabels = { checkIn: 'entrada', breakStart: 'inicio de break', breakEnd: 'fin de break', checkOut: 'salida' };
+  const attendanceLabels = { checkIn: 'entrada', breakStart: 'inicio de almuerzo', breakEnd: 'fin de almuerzo', checkOut: 'salida' };
   $('btnCheckIn').addEventListener('click', () => markAttendance('checkIn'));
   $('btnBreakStart').addEventListener('click', () => markAttendance('breakStart'));
   $('btnBreakEnd').addEventListener('click', () => markAttendance('breakEnd'));
@@ -286,9 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTasks() {
     const completed = getTasks();
     const priorityOrder = { alta: 0, media: 1, baja: 2 };
-    const assigned = assignments().filter((task) => task.employee === currentEmployeeName() && task.date === todayKey()).sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    const visible = assigned.length ? assigned.map((task, index) => ({ ...task, index })) : taskList.map((title, index) => ({ title, priority: index === 0 ? 'alta' : index === 1 ? 'media' : 'baja', index }));
-    $('todayTasks').innerHTML = visible.map((task) => `<label class="task-item priority-${task.priority}"><input type="checkbox" data-task="${task.index}" data-assignment="${escapeHtml(task.title)}" ${completed.includes(task.index) ? 'checked' : ''}><span>${escapeHtml(task.title)} <small>Prioridad ${task.priority}</small></span><b>${completed.includes(task.index) ? 'Completada' : 'Pendiente'}</b></label>`).join('');
+    const assigned = assignments().filter((task) => task.employee === currentEmployeeName() && task.date <= todayKey()).sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    const customTasks = assigned.map((task, index) => ({ ...task, index, taskId: `custom-${index}` }));
+    const defaults = taskList.map((title, index) => ({ title, priority: index === 0 ? 'alta' : index === 1 ? 'media' : 'baja', index: customTasks.length + index, taskId: `default-${index}` }));
+    const visible = [...customTasks, ...defaults];
+    $('todayTasks').innerHTML = visible.map((task) => `<label class="task-item priority-${task.priority}"><input type="checkbox" data-task="${task.index}" data-assignment="${escapeHtml(task.title)}" ${completed.includes(task.index) || task.done ? 'checked' : ''}><span>${escapeHtml(task.title)} <small>${task.taskId.startsWith('custom') ? `Asignada · ${task.date} · ` : ''}Prioridad ${task.priority}</small></span><b>${completed.includes(task.index) || task.done ? 'Completada' : 'Pendiente'}</b></label>`).join('');
   }
   $('todayTasks').addEventListener('change', (event) => {
     const index = Number(event.target.dataset.task);
@@ -313,7 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Encuesta del proveedor: seis calificaciones de 1 a 5. */
   const surveyTexts = ['Puntualidad de entrega', 'Calidad de productos', 'Comunicación', 'Precio competitivo', 'Atención al cliente', 'Cumplimiento de acuerdos'];
-  $('surveyQuestions').innerHTML = surveyTexts.map((question, index) => `<fieldset class="survey-question"><legend>${index + 1}. ${question}</legend>${[1, 2, 3, 4, 5].map((score) => `<label><input required type="radio" name="question${index}" value="${score}"> ${score}</label>`).join('')}</fieldset>`).join('');
+  const ratingOptions = (name) => [1, 2, 3, 4, 5].map((score) => `<label class="rating-option"><input required type="radio" name="${name}" value="${score}"><span><i class="fa-solid fa-star"></i>${score}</span></label>`).join('');
+  $('surveyQuestions').innerHTML = surveyTexts.map((question, index) => `<fieldset class="survey-question"><legend>${index + 1}. ${question}</legend><div class="rating-options">${ratingOptions(`question${index}`)}</div></fieldset>`).join('');
   $('supplierSurvey').addEventListener('submit', (event) => { event.preventDefault(); if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity(); const scores = surveyTexts.map((_, index) => Number(new FormData(event.currentTarget).get(`question${index}`))); const average = (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1); showToast(`Encuesta guardada: ${$('surveySupplier').value} obtuvo ${average}/5.`); event.currentTarget.reset(); });
 
   /* ----------------------------------------------------------------
@@ -327,14 +374,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const employeeQuestions = ['Claridad de las tareas', 'Ambiente laboral', 'Comunicación con administración', 'Herramientas de trabajo'];
   $('btnBiometric').addEventListener('click', async (event) => { event.stopImmediatePropagation(); const status=$('biometricStatus'), video=$('biometricVideo'); status.textContent='Abriendo cámara…'; $('btnBiometric').disabled=true; try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; window.setTimeout(()=>{status.textContent='Reconocido. Ingrese su contraseña para continuar.'; $('btnBiometric').disabled=false; $('loginPass').focus();},1200); } catch { status.textContent='Cámara no disponible. Ingrese su contraseña normalmente.'; $('btnBiometric').disabled=false; } }, true);
   function registerSecurityAlert(attemptedUser) { const alerts=JSON.parse(localStorage.getItem(securityStorage)||'[]'); alerts.unshift({attemptedUser,date:new Date().toLocaleDateString('es-GT'),time:new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}); localStorage.setItem(securityStorage,JSON.stringify(alerts)); }
-  $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend>${[1,2,3,4,5].map(n=>`<label><input required type="radio" name="employeeQuestion${i}" value="${n}"> ${n}</label>`).join('')}</fieldset>`).join('');
+  $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
   $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();showToast('Encuesta enviada.');});
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${q}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
   function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;}
   $('dailyReportForm').addEventListener('submit',e=>{e.preventDefault();const r=JSON.parse(localStorage.getItem(reportStorage)||'[]');r.unshift({name:currentEmployeeName(),text:$('dailyReportText').value.trim(),date:todayKey()});localStorage.setItem(reportStorage,JSON.stringify(r));$('dailyReportStatus').textContent='Reporte enviado correctamente.';e.currentTarget.reset();renderEmployeeAdmin();showToast('Reporte de jornada enviado.');});
-  $('btnNotifications').addEventListener('click',()=>{const a=JSON.parse(localStorage.getItem(securityStorage)||'[]');if(currentUser?.role==='Admin'&&a.length)showToast(`ALERTA: ${a[0].attemptedUser} intentó ingresar el ${a[0].date} a las ${a[0].time}.`,true);});
   renderSurveyResults(); renderEmployeeAdmin();
 
   Object.entries(modules).forEach(([key, config]) => setupModule(key, config));
@@ -426,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatCell(record, label, config) {
     const field = label.toLowerCase().replace(' jurídica', '');
     if (label === config.status) return statusBadge(record.estado, config.lowStock ? Number(record.stock) : null);
-    if (label === 'Precio') return new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(Number(record.precio));
+    if (label === 'Precio') return new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 2 }).format(Number(record.precio));
     return escapeHtml(record[field] ?? '');
   }
 
