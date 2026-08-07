@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mision, vision y valores | AAA Software</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="standalone-page philosophy-page">
+    <header class="standalone-header">
+      <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
+      <div><p class="eyebrow">AAA SOFTWARE</p><h1>Nuestra esencia</h1><p>Mision, vision y valores que orientan nuestro trabajo.</p></div>
+      <label class="language-picker" for="languageSelect" title="Cambiar idioma"><i class="fa-solid fa-language"></i><select id="languageSelect" aria-label="Cambiar idioma"><option value="es">ES</option><option value="en">EN</option></select></label>
+      <a class="btn-action btn-action--secondary" href="index.html"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+    </header>
+    <section class="philosophy-grid" aria-label="Mision, vision y valores">
+      <article class="philosophy-card"><i class="fa-solid fa-bullseye"></i><h2>Mision</h2><p>Crear software confiable que simplifique el trabajo y ayude a crecer a nuestros clientes.</p></article>
+      <article class="philosophy-card"><i class="fa-solid fa-compass"></i><h2>Vision</h2><p>Ser un aliado tecnologico referente en Costa Rica y Latinoamerica.</p></article>
+      <article class="philosophy-card"><i class="fa-solid fa-handshake"></i><h2>Valores</h2><p>Innovacion responsable, colaboracion, calidad y cercania con las personas.</p></article>
+    </section>
+  </main>
+  <script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+  <script src="i18n.js"></script>
+  <script>
+    window.AAAI18n?.ready?.then(() => {
+      const select = document.getElementById('languageSelect');
+      if (!select) return;
+      select.value = localStorage.getItem('aaa_language') === 'en' ? 'en' : 'es';
+      select.addEventListener('change', (event) => window.AAAI18n.setLanguage(event.target.value));
+    });
+  </script>
+</body>
+</html>
