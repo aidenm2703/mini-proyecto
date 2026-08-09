@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Calendario de eventos | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="eventos">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Calendario de eventos" data-subtitle="Feriados oficiales de Costa Rica 2026 y colaboradores de turno.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario de feriados 2026</h2></div>
+        <div class="panel__body">
+          <div class="calendar-legend"><span><b class="legend-dot" style="background:#ffbf35;"></b>Feriado oficial · Pago doble</span></div>
+          <div class="holiday-months" id="holidayMonths"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const holidayYear = 2026;
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const weekdayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const holidays = {
+    '1-0': { name: 'Año Nuevo', workers: ['Diego Castro', 'María José Vargas', 'Esteban Rojas'] },
+    '11-3': { name: 'Día de Juan Santamaría', workers: ['Andrés Mora', 'Gabriela Navarro'] },
+    '17-3': { name: 'Semana Santa', workers: ['Ana Patricia Solano', 'Cindy Herrera', 'Roberto Alfaro'] },
+    '1-4': { name: 'Día del Trabajo', workers: ['Ana Rojas', 'Melissa Blanco', 'Jonathan Picado'] },
+    '25-6': { name: 'Anexión del Partido de Nicoya', workers: ['María Fernanda López', 'Sofía Rojas', 'Kevin Ureña', 'Oscar Valverde'] },
+    '2-7': { name: 'Día de la Virgen de los Ángeles', workers: ['Lucía Vargas', 'Fabián Castro'] },
+    '15-7': { name: 'Día de la Madre', workers: ['Daniela Solís', 'Rebeca Mora', 'Alonso Vega'] },
+    '15-8': { name: 'Día de la Independencia', workers: ['Paula Jiménez', 'Fernando Agüero', 'Silvia Cordero'] },
+    '12-9': { name: 'Día de las Culturas', workers: ['Natalia Quesada', 'Jorge Fallas', 'Manuel Sánchez'] },
+    '25-11': { name: 'Navidad', workers: ['Pamela Murillo', 'Karla Morales', 'Luis Eduardo Chaves', 'Diego Chaves'] }
+  };
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    document.getElementById('holidayMonths').innerHTML = monthNames.map((month, monthIndex) => {
+      const daysInMonth = new Date(holidayYear, monthIndex + 1, 0).getDate();
+      const offset = new Date(holidayYear, monthIndex, 1).getDay();
+      const cells = weekdayNames.map((n) => `<div class="calendar-weekday">${t(n)}</div>`).join('')
+        + Array.from({ length: offset }, () => '<div class="calendar-day calendar-day--empty"></div>').join('')
+        + Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const holiday = holidays[`${day}-${monthIndex}`];
+          if (!holiday) return `<div class="calendar-day"><b>${day}</b></div>`;
+          return `<div class="calendar-day holiday-day"><b>${day}</b><small class="holiday-pay">${t('Pago doble')}</small><small class="holiday-names">${t(holiday.name)}<br>${holiday.workers.map((w) => window.AAA.esc(w)).join(', ')}</small></div>`;
+        }).join('');
+      return `<div class="holiday-month"><h4>${t(month)} ${holidayYear}</h4><div class="work-calendar">${cells}</div></div>`;
+    }).join('');
+  };
+</script>
+</body></html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Noticias y anuncios | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="noticias">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Noticias y anuncios" data-subtitle="Últimas novedades de AAA Software.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-newspaper"></i> Noticias y anuncios de la empresa</h2></div>
+        <div class="panel__body"><div class="news-list" id="newsList"></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const fmtDate = (date) => `${String(date.getDate()).padStart(2, '0')} ${['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'][date.getMonth()]} ${date.getFullYear()}`;
+  const daysAgo = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d; };
+  const now = new Date();
+  const currentMonth = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'][now.getMonth()];
+  const newsItems = [
+    { title: `Cumpleañeros del mes de ${currentMonth}`, text: `Cumpleañeros del mes de ${currentMonth}: Ana Rojas, Diego Chaves, Gabriela Navarro. ¡Feliz cumpleaños a todos!`, tag: 'Celebraciones', date: fmtDate(now) },
+    { title: 'Baby shower de Ana Rodríguez', text: 'Hoy celebramos el baby shower de Ana Rodríguez en nuestro comedor a las 3:00 PM. ¡Todos están invitados!', tag: 'General', date: fmtDate(now) },
+    { title: 'Cierre contable del trimestre', text: 'Recordatorio: Cierre contable del trimestre el próximo viernes. Asegúrense de tener todos sus comprobantes al día.', tag: 'RRHH', date: fmtDate(daysAgo(2)) },
+    { title: 'Nuevo Gerente de Tecnología', text: 'Nombramiento del nuevo Gerente de Tecnología. Damos la bienvenida a Roberto Jiménez en su nuevo rol.', tag: 'RRHH', date: fmtDate(daysAgo(5)) },
+    { title: 'Reconocimiento a Carlos Mendoza', text: 'Agradecemos a Carlos Mendoza por sus años de servicio en la empresa. Tu dedicación y compromiso dejaron una marca imborrable.', tag: 'RRHH', date: fmtDate(daysAgo(10)) },
+    { title: 'Feliz Día de la Madre', text: 'Felicitamos a todas las mamás que con su aporte e inteligencia hacen que nuestra empresa crezca cada día.', tag: 'Celebraciones', date: '15 Ago 2025' },
+    { title: 'Feliz Día del Niño', text: 'Porque nunca dejamos de ser niños que sueñan, gracias por ser parte de nuestro equipo.', tag: 'Celebraciones', date: '15 Sep 2025' },
+    { title: 'Feliz Día del Padre', text: 'Por todos esos papás que se esfuerzan y luchan por ser mejores hombres cada día.', tag: 'Celebraciones', date: '17 Jun 2025' }
+  ];
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    document.getElementById('newsList').innerHTML = newsItems.map((n) => `<div class="news-item"><i class="fa-solid ${n.tag === 'Celebraciones' ? 'fa-cake-candles' : n.tag === 'RRHH' ? 'fa-users-rectangle' : 'fa-bullhorn'}"></i><div><h4>${window.AAA.esc(n.title)}</h4><small>${window.AAA.esc(n.text)}</small><span class="news-meta"><span class="badge badge--${n.tag === 'Celebraciones' ? 'celebraciones' : n.tag === 'RRHH' ? 'rrhh' : 'general'}">${t(n.tag)}</span>${window.AAA.esc(n.date)}</span></div></div>`).join('');
+  };
+</script>
+</body></html>

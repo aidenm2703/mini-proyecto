@@ -67,14 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
     elevatorMusic = window.setInterval(() => { playTone(notes[index++ % notes.length], .45, 'sine', .018); }, 600);
   }
 
-  // Alarma alternada que dura exactamente diez segundos al tercer fallo.
-  function playAlarmForTenSeconds() {
-    const start = Date.now();
-    const alarm = window.setInterval(() => {
-      if (Date.now() - start >= 10000) return window.clearInterval(alarm);
-      playTone(880, 0.22, 'square', 0.06);
-      window.setTimeout(() => playTone(660, 0.22, 'square', 0.06), 250);
-    }, 500);
+  // Sonido de fallo suave: dos tonos descendentes y breves, sin estridencias.
+  function playFailureSound() {
+    playTone(196, 0.18, 'triangle', 0.09);
+    window.setTimeout(() => playTone(155.56, 0.34, 'triangle', 0.09), 190);
   }
 
   /* ----------------------------------------------------------------
@@ -92,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
       failedAttempts = 0; // Un acceso correcto reinicia el contador de seguridad.
       if (elevatorMusic) { window.clearInterval(elevatorMusic); elevatorMusic = null; }
       currentUser = user;
+      localStorage.setItem('aaa_current_user', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
       updateUserInterface();
       $('loginScreen').style.display = 'none';
       $('dashboardScreen').style.display = 'flex';
@@ -104,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     failedAttempts += 1;
+    playFailureSound();
     const remaining = 3 - failedAttempts;
     $('loginErrorText').textContent = remaining > 0
       ? `Usuario, contraseña o tipo de acceso incorrecto. Intentos restantes: ${remaining}.`
@@ -155,13 +153,19 @@ document.addEventListener('DOMContentLoaded', () => {
     [['sidebarAvatar', initial], ['headerAvatar', initial], ['sidebarUserName', currentUser.name], ['headerUserName', currentUser.name], ['sidebarUserRole', currentUser.role], ['headerUserRole', currentUser.role]]
       .forEach(([id, value]) => { $(id).textContent = value; });
     // El portal de colaborador muestra el rol operativo asignado para esta jornada.
-    if (currentUser.role === 'Usuario') $('userWelcomeTitle').textContent = `Hola, ${currentUser.name} · Rol del día: Operador de logística`;
+    if (currentUser.role === 'Usuario') renderWelcomeTitle();
+  }
+  function renderWelcomeTitle() {
+    const title = $('userWelcomeTitle');
+    if (!title) return;
+    const t = (source) => (window.AAAI18n?.t ? window.AAAI18n.t(source) : source);
+    title.innerHTML = `${t('Hola')}, ${currentUser.name} · <span class="role-tag">${t('Rol del día')}: ${t('Operador de logística')}</span>`;
   }
 
-  // Muestra el aviso y activa la alarma solicitada; cerrar solo oculta el aviso.
+  // Muestra el aviso y emite el sonido de fallo; cerrar solo oculta el aviso.
   function showEmergency() {
     $('emergencyModal').style.display = 'grid';
-    playAlarmForTenSeconds();
+    playFailureSound();
   }
   $('btnCloseEmergency').addEventListener('click', () => {
     $('emergencyModal').style.display = 'none';
@@ -211,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ['btnSidebarLogout', 'btnHeaderLogout'].forEach((id) => $(id).addEventListener('click', logout));
   function logout() {
     currentUser = null;
+    localStorage.removeItem('aaa_current_user');
     $('dashboardScreen').style.display = 'none';
     $('loginScreen').style.display = 'flex';
     $('loginForm').reset();
@@ -222,6 +227,27 @@ document.addEventListener('DOMContentLoaded', () => {
     $('loginError').style.display = 'none';
     changeSection('dashboard');
     showToast('La sesión se cerró correctamente.');
+  }
+
+  // Restaura la sesión guardada cuando el colaborador vuelve desde un módulo.
+  // El botón "Volver al inicio" abre index.html#seccion: aquí se retoma la
+  // sesión sin pasar por el login, sin borrar localStorage y sin cerrar sesión.
+  function restoreSession() {
+    const saved = JSON.parse(localStorage.getItem('aaa_current_user') || 'null');
+    if (!saved) return;
+    const savedEmployees = JSON.parse(localStorage.getItem(employeeStorage) || '[]');
+    const user = users[saved.username]
+      || Object.values(users).find((item) => item.username === saved.username || item.name === saved.name)
+      || savedEmployees.find((item) => item.username === saved.username || item.name === saved.name);
+    if (!user) return;
+    currentUser = user;
+    updateUserInterface();
+    $('loginScreen').style.display = 'none';
+    $('dashboardScreen').style.display = 'flex';
+    $('dashboardScreen').classList.toggle('user-session', user.role === 'Usuario');
+    $('dashboardScreen').classList.toggle('admin-session', user.role === 'Admin');
+    const section = window.location.hash.slice(1) || (user.role === 'Usuario' ? 'miPortal' : 'dashboard');
+    if (document.getElementById(`sec${section[0]?.toUpperCase() || ''}${section.slice(1)}`)) changeSection(section);
   }
 
   const notifications = [
@@ -237,7 +263,12 @@ document.addEventListener('DOMContentLoaded', () => {
     visibleNotifications = [...taskUpdates, ...items.map((item) => ({ ...item, detail: 'Se detectó un intento de acceso. Puede revisar la información de seguridad y confirmar que la persona use sus credenciales correctas.' })), ...notifications];
     $('notificationList').innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
     $('notificationDetail').textContent = 'Seleccione una notificación para ver el detalle.';
-    $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = visibleNotifications.length;
+    // Solo se muestra el número de notificaciones sin leer; 0 oculta el distintivo.
+    const readCount = Number(localStorage.getItem('aaa_notifications_read') || 0);
+    const unread = Math.max(0, visibleNotifications.length - readCount);
+    const badge = $('btnNotifications').querySelector('.header-icon-btn__badge');
+    badge.textContent = unread > 0 ? String(unread) : '';
+    badge.title = unread > 0 ? `${unread} ${unread === 1 ? 'sin leer' : 'sin leer'}` : '';
   }
   $('btnNotifications').addEventListener('click', (event) => {
     event.stopPropagation();
@@ -246,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('btnNotifications').setAttribute('aria-expanded', String(!panel.hidden));
   });
   $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail)}</span>`; });
-  $('btnClearNotifications').addEventListener('click', () => { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = '0'; showToast('Notificaciones marcadas como leídas.'); });
+  $('btnClearNotifications').addEventListener('click', () => { localStorage.setItem('aaa_notifications_read', String(visibleNotifications.length)); renderNotifications(); $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); showToast('Notificaciones marcadas como leídas.'); });
   document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
 
   const languageNames = { es: 'Español', en: 'English' };
@@ -265,6 +296,9 @@ document.addEventListener('DOMContentLoaded', () => {
         $('pageTitle').textContent = title;
         $('pageBreadcrumb').textContent = `${language === 'en' ? 'Home' : 'Inicio'} / ${title}`;
       }
+      if (currentUser?.role === 'Usuario') renderWelcomeTitle();
+      renderEmployeeSurvey();
+      renderSurveyResults();
       showToast(`Idioma cambiado a ${languageNames[language]}.`);
     });
   }
@@ -293,6 +327,15 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast(message, !hasProof);
     }, 15000);
   });
+
+  // Muestra el nombre del archivo elegido en el botón de adjuntar comprobante.
+  const absenceProofLabel = $('absenceProofLabel');
+  if (absenceProofLabel && $('absenceProof')) {
+    $('absenceProof').addEventListener('change', (event) => {
+      const file = event.target.files && event.target.files[0];
+      absenceProofLabel.textContent = file ? file.name : (window.AAAI18n?.t ? window.AAAI18n.t('Seleccionar archivo') : 'Seleccionar archivo');
+    });
+  }
 
   /* ----------------------------------------------------------------
      ASISTENCIA Y TAREAS
@@ -380,11 +423,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const assignments = () => JSON.parse(localStorage.getItem(assignmentStorage) || '[]');
   const currentEmployeeName = () => currentUser?.name || 'María Fernanda López';
   const employeeQuestions = ['Claridad de las tareas', 'Ambiente laboral', 'Comunicación con administración', 'Herramientas de trabajo'];
+  const i18nText = (source) => (window.AAAI18n?.t ? window.AAAI18n.t(source) : source);
+  function renderEmployeeSurvey() {
+    if (!$('employeeSurveyQuestions')) return;
+    $('employeeSurveyQuestions').innerHTML = employeeQuestions.map((q, i) => `<fieldset class="survey-question"><legend>${i + 1}. ${i18nText(q)}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
+  }
   $('btnBiometric').addEventListener('click', async () => { const status=$('biometricStatus'), video=$('biometricVideo'), button=$('btnBiometric'); status.textContent='Escaneando rasgos faciales…'; button.disabled=true; video.classList.add('biometric-video--scanning'); try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; } catch { video.hidden=true; } window.setTimeout(()=>{video.classList.remove('biometric-video--scanning'); video.srcObject?.getTracks().forEach((track)=>track.stop()); video.srcObject=null; video.hidden=true; status.textContent='Persona no reconocida. Cámara apagada. Ingrese con su contraseña.';button.disabled=false;$('loginPass').focus();},2200); });
   function registerSecurityAlert(attemptedUser) { const alerts=JSON.parse(localStorage.getItem(securityStorage)||'[]'); alerts.unshift({attemptedUser,date:new Date().toLocaleDateString('es-GT'),time:new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}); localStorage.setItem(securityStorage,JSON.stringify(alerts)); }
-  $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
-  $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();showToast('Encuesta enviada.');});
-  function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${q}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
+  renderEmployeeSurvey();
+  $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();renderEmployeeSurvey();showToast('Encuesta enviada.');});
+  function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${i18nText(q)}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
   function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
@@ -393,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btnClearTasks').addEventListener('click',()=>{if(!assignments().length)return showToast('No hay tareas para limpiar.');localStorage.removeItem(assignmentStorage);localStorage.removeItem('aaa_task_notifications');renderEmployeeAdmin();renderTasks();showToast('Todas las tareas asignadas fueron eliminadas.');});
   $('dailyReportForm').addEventListener('submit',e=>{e.preventDefault();const r=JSON.parse(localStorage.getItem(reportStorage)||'[]');r.unshift({name:currentEmployeeName(),text:$('dailyReportText').value.trim(),date:todayKey()});localStorage.setItem(reportStorage,JSON.stringify(r));$('dailyReportStatus').textContent='Reporte enviado correctamente.';e.currentTarget.reset();renderEmployeeAdmin();showToast('Reporte de jornada enviado.');});
   renderSurveyResults(); renderEmployeeAdmin();
+
 
   Object.entries(modules).forEach(([key, config]) => setupModule(key, config));
 
@@ -557,5 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAttendance();
   renderTasks();
   renderTraceability();
+  renderNotifications();
+  restoreSession();
   startInteractiveBackground();
 });

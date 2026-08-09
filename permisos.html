@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Solicitar permiso | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="permisos">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Solicitar permiso" data-subtitle="Solicita vacaciones, permisos médicos y otros con tu saldo disponible.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-envelope-open-text"></i> Solicitar permiso</h2></div>
+        <div class="panel__body">
+          <div class="vacation-balance">
+            <div class="vacation-tile"><b id="vacationAvailable">12</b><span>Días de vacaciones disponibles</span></div>
+            <div class="vacation-tile"><b id="vacationUsed">3</b><span>Vacaciones usadas</span></div>
+            <div class="vacation-tile"><b>15</b><span>Total anual</span></div>
+          </div>
+          <form id="permitForm" class="form-grid">
+            <div class="form-group"><label for="permitType">Tipo de permiso</label><select id="permitType" class="form-select"><option value="vacaciones">Vacaciones</option><option value="medico">Médico</option><option value="personal">Personal</option><option value="familiar">Familiar</option><option value="estudio">Estudio</option></select></div>
+            <div class="form-group"><label for="permitReason">Motivo</label><input id="permitReason" class="form-input" required placeholder="Explique brevemente el motivo..."></div>
+            <div class="form-group"><label for="permitStart">Fecha de inicio</label><input id="permitStart" type="date" class="form-input" required></div>
+            <div class="form-group"><label for="permitEnd">Fecha de fin</label><input id="permitEnd" type="date" class="form-input" required></div>
+            <div class="form-group form-group--full"><p class="schedule-note">Al elegir el rango verá los días marcados en el calendario de vista previa.</p></div>
+            <button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar solicitud</button>
+          </form>
+          <div class="permit-calendar-preview">
+            <p class="schedule-note"><strong>Vista previa del mes</strong> (Agosto 2026)</p>
+            <div class="work-calendar" id="permitCalendar"></div>
+            <p id="permitRangeInfo" class="permit-range">Seleccione un rango de fechas.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const vacationStorage = 'aaa_vacation_balance';
+  const getVacation = () => JSON.parse(localStorage.getItem(vacationStorage) || '{"total":15,"used":3}');
+  const permitDayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const renderVacation = () => {
+    const v = getVacation();
+    document.getElementById('vacationAvailable').textContent = v.total - v.used;
+    document.getElementById('vacationUsed').textContent = v.used;
+  };
+  const renderPermitCalendar = () => {
+    const firstDay = new Date(2026, 7, 1).getDay();
+    document.getElementById('permitCalendar').innerHTML = permitDayNames.map((n) => `<div class="calendar-weekday">${window.AAA.t(n)}</div>`).join('')
+      + Array.from({ length: firstDay }, () => '<div class="calendar-day calendar-day--empty"></div>').join('')
+      + Array.from({ length: 31 }, (_, i) => `<div class="calendar-day" data-day="${i + 1}"><b>${i + 1}</b></div>`).join('');
+  };
+  const updatePermitRange = () => {
+    const start = document.getElementById('permitStart').value;
+    const end = document.getElementById('permitEnd').value;
+    document.querySelectorAll('#permitCalendar .calendar-day').forEach((cell) => cell.classList.remove('permit-day--selected'));
+    if (!start || !end || end < start) { document.getElementById('permitRangeInfo').textContent = window.AAA.t('Seleccione un rango de fechas.'); return; }
+    const from = new Date(start);
+    const to = new Date(end);
+    if (from.getFullYear() !== 2026 || from.getMonth() !== 7) { document.getElementById('permitRangeInfo').textContent = window.AAA.t('El calendario de vista previa es de Agosto 2026.'); return; }
+    let count = 0;
+    for (let d = new Date(from); d <= to; d.setDate(d.getDate() + 1)) {
+      count += 1;
+      const cell = document.querySelector(`#permitCalendar .calendar-day[data-day="${d.getDate()}"]`);
+      if (cell) cell.classList.add('permit-day--selected');
+    }
+    document.getElementById('permitRangeInfo').innerHTML = `${count} <b>${window.AAA.t('días solicitados')}</b>`;
+  };
+  window.renderPage = () => { renderVacation(); renderPermitCalendar(); };
+  document.getElementById('permitStart').addEventListener('change', updatePermitRange);
+  document.getElementById('permitEnd').addEventListener('change', updatePermitRange);
+  document.getElementById('permitForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const start = document.getElementById('permitStart').value;
+    const end = document.getElementById('permitEnd').value;
+    if (!start || !end || end < start) return window.AAA.showToast(window.AAA.t('Seleccione un rango de fechas válido.'), true);
+    const type = document.getElementById('permitType').value;
+    const days = Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+    if (type === 'vacaciones') {
+      const v = getVacation();
+      if (days > v.total - v.used) return window.AAA.showToast(window.AAA.t('No tiene suficientes días de vacaciones.'), true);
+      v.used += days;
+      localStorage.setItem(vacationStorage, JSON.stringify(v));
+      renderVacation();
+    }
+    event.currentTarget.reset();
+    updatePermitRange();
+    window.AAA.showToast(window.AAA.t('Permiso enviado correctamente.'));
+  });
+</script>
+</body></html>

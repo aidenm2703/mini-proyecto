@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Recibos de nómina | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="nomina">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Recibos de nómina" data-subtitle="Consulta y descarga tus recibos de pago.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-invoice-dollar"></i> Recibos de nómina</h2></div>
+        <div class="panel__body"><div class="payroll-list" id="payrollList"></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const payroll = [
+    { employee: 'Ana Rojas', month: 'Enero', year: 2025, amount: '₡950,000' },
+    { employee: 'Diego Chaves', month: 'Enero', year: 2025, amount: '₡820,000' },
+    { employee: 'María López', month: 'Enero', year: 2025, amount: '₡780,000' },
+    { employee: 'Carolina Méndez', month: 'Diciembre', year: 2024, amount: '₡1,200,000' },
+    { employee: 'Andrés Morales', month: 'Diciembre', year: 2024, amount: '₡750,000' },
+    { employee: 'Laura Ramírez', month: 'Noviembre', year: 2024, amount: '₡890,000' }
+  ];
+  const downloadPayroll = (item) => {
+    const t = window.AAA.t;
+    const period = `${item.month} ${item.year}`;
+    const filename = `Recibo-${item.employee.replace(/\s+/g, '-')}-${item.month}-${item.year}.pdf`;
+    if (window.jspdf && window.jspdf.jsPDF) {
+      const doc = new window.jspdf.jsPDF();
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(17);
+      doc.text('AAA Software', 20, 24);
+      doc.setFontSize(12);
+      doc.text(t('Recibo de nómina'), 20, 38);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(11);
+      doc.text(`${t('Empleado')}: ${item.employee}`, 20, 52);
+      doc.text(`${t('Mes de la nómina')}: ${period}`, 20, 62);
+      doc.text(`${t('Monto')}: ${item.amount}`, 20, 72);
+      doc.save(filename);
+    } else {
+      const blob = new Blob([`AAA Software\n${t('Recibo de nómina')}\n\n${t('Empleado')}: ${item.employee}\n${t('Mes de la nómina')}: ${period}\n${t('Monto')}: ${item.amount}`], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    window.AAA.showToast(`${t('Recibo descargado.')} — ${item.employee} · ${period}`);
+  };
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    document.getElementById('payrollList').innerHTML = `<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('Empleado')}</th><th>${t('Mes')}</th><th>${t('Monto')}</th><th>${t('Acción')}</th></tr></thead><tbody>${payroll.map((p, index) => `<tr><td>${window.AAA.esc(p.employee)}</td><td>${p.month} ${p.year}</td><td>${p.amount}</td><td><button type="button" class="btn-action btn-action--secondary" data-receipt="${index}"><i class="fa-solid fa-download"></i> ${t('Descargar PDF')}</button></td></tr>`).join('')}</tbody></table></div>`;
+  };
+  document.getElementById('payrollList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-receipt]');
+    if (!button) return;
+    downloadPayroll(payroll[Number(button.dataset.receipt)]);
+  });
+</script>
+</body></html>

@@ -220,6 +220,52 @@
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Mi encuesta</span>
             </a>
           </li>
+          <li class="sidebar-group user-only" aria-hidden="true"><span>Mi portal</span></li>
+          <li class="user-only">
+            <a href="evaluacion.html" class="sidebar-nav__link" data-section="evaluacion" data-new-tab="true">
+              <i class="fa-solid fa-clipboard-check"></i><span class="sidebar-nav__text">Evaluación de desempeño</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="plan-carrera.html" class="sidebar-nav__link" data-section="planCarrera" data-new-tab="true">
+              <i class="fa-solid fa-sitemap"></i><span class="sidebar-nav__text">Plan de carrera</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="formacion.html" class="sidebar-nav__link" data-section="formacion" data-new-tab="true">
+              <i class="fa-solid fa-graduation-cap"></i><span class="sidebar-nav__text">Cursos y certificaciones</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="permisos.html" class="sidebar-nav__link" data-section="permisos" data-new-tab="true">
+              <i class="fa-solid fa-envelope-open-text"></i><span class="sidebar-nav__text">Solicitar permiso</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="noticias.html" class="sidebar-nav__link" data-section="noticias" data-new-tab="true">
+              <i class="fa-solid fa-newspaper"></i><span class="sidebar-nav__text">Noticias y anuncios</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="directorio.html" class="sidebar-nav__link" data-section="directorio" data-new-tab="true">
+              <i class="fa-solid fa-address-book"></i><span class="sidebar-nav__text">Directorio de empleados</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="eventos.html" class="sidebar-nav__link" data-section="eventos" data-new-tab="true">
+              <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario de eventos</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="nomina.html" class="sidebar-nav__link" data-section="nomina" data-new-tab="true">
+              <i class="fa-solid fa-file-invoice-dollar"></i><span class="sidebar-nav__text">Recibos de nómina</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="documentos.html" class="sidebar-nav__link" data-section="documentos" data-new-tab="true">
+              <i class="fa-solid fa-folder-open"></i><span class="sidebar-nav__text">Documentos legales</span>
+            </a>
+          </li>
         </ul>
       </nav>
 
@@ -273,7 +319,7 @@
           <div class="notification-wrap">
           <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones" aria-expanded="false">
             <i class="fa-solid fa-bell"></i>
-            <span class="header-icon-btn__badge">3</span>
+            <span class="header-icon-btn__badge"></span>
           </button>
           <div id="notificationPanel" class="notification-panel" hidden>
             <div class="notification-panel__header"><strong>Notificaciones</strong><button id="btnClearNotifications" type="button">Marcar leídas</button></div>
@@ -808,8 +854,9 @@
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-pen"></i> Reporte de jornada</h2></div><div class="panel__body"><form id="dailyReportForm" class="daily-report"><label for="dailyReportText">Reporte de lo realizado hoy</label><textarea id="dailyReportText" class="form-input form-textarea" required placeholder="Cuente qué realizó durante la jornada..."></textarea><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar reporte</button><p id="dailyReportStatus" class="justification-status">Aún no ha enviado su reporte.</p></form></div></div>
           <div class="two-column-layout">
             <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Almuerzo</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00 AM</td><td>12:00 PM – 01:00 PM</td><td>05:00 PM</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de almuerzo.</p></div></div>
-            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><input id="absenceProof" class="form-input file-input" type="file" accept="image/*"></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><label class="file-drop" for="absenceProof"><i class="fa-solid fa-paperclip"></i><span id="absenceProofLabel">Seleccionar archivo</span></label><input id="absenceProof" type="file" accept="image/*" hidden></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
           </div>
+
         </section>
 
         <!-- Calendario de ejemplo para distinguir descansos, pagos dobles y días laborales. -->
@@ -872,7 +919,7 @@
       <i class="fa-solid fa-triangle-exclamation emergency-modal__icon"></i>
       <h2 id="emergencyTitle">Acceso no autorizado</h2>
       <p>Emergencia: usted no es un usuario autorizado.</p>
-      <p class="emergency-modal__detail">La alarma sonará durante 10 segundos. Verifique sus credenciales antes de volver a intentar.</p>
+      <p class="emergency-modal__detail">Se emitirá un aviso sonoro breve. Verifique sus credenciales antes de volver a intentar.</p>
       <button id="btnCloseEmergency" class="btn-action btn-action--danger">Entendido</button>
     </div>
   </div>

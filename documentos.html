@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Políticas internas | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="documentos">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Políticas internas de la empresa" data-subtitle="Consulta las políticas y el reglamento que orientan el trabajo en AAA Software.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-folder-open"></i> Políticas Internas de la Empresa</h2></div>
+        <div class="panel__body">
+          <p class="schedule-note">Haz clic en un documento para leer su contenido.</p>
+          <div class="doc-list" id="docList"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<div id="docModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+  <div class="modal-box modal-box--doc">
+    <button type="button" class="modal-box__close" id="docModalClose" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+    <h3 class="modal-box__title" id="docModalTitle"></h3>
+    <p class="doc-modal-date" id="docModalDate"></p>
+    <div class="doc-modal-body" id="docModalBody"></div>
+    <div class="modal-box__actions"><button class="btn-action btn-action--secondary" id="docModalDone">Cerrar</button></div>
+  </div>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const documents = [
+    { icon: 'fa-laptop', name: 'Política de uso de equipos tecnológicos', date: '10/02/2026', content: 'Los equipos tecnológicos entregados por la empresa son para uso exclusivo de las funciones laborales. Queda prohibido instalar software sin autorización del departamento de Tecnología y acceder a sitios que comprometan la seguridad de la información.\n\nEl colaborador es responsable del cuidado físico de su equipo y debe reportar cualquier daño o extravío de inmediato. Toda la información corporativa almacenada en el equipo pertenece a la empresa y puede ser auditada en cualquier momento.' },
+    { icon: 'fa-scroll', name: 'Reglamento interno de trabajo', date: '02/01/2025', content: 'La jornada laboral es de lunes a viernes de 8:00 a.m. a 5:00 p.m., con una hora de almuerzo. El colaborador debe marcar su asistencia diaria en el portal de acuerdo con los horarios establecidos.\n\nLos permisos y vacaciones se solicitan con al menos 48 horas de anticipación, salvo emergencias debidamente justificadas. El incumplimiento reiterado de las normas puede generar amonestaciones y, en casos graves, la terminación del contrato.' },
+    { icon: 'fa-umbrella-beach', name: 'Política de vacaciones y permisos', date: '18/06/2025', content: 'El colaborador acumula 15 días hábiles de vacaciones por año laborado. Las vacaciones deben solicitarse por el portal y se aprueban según la operación del área.\n\nLos permisos médicos requieren comprobante emitido por la CCSS o un profesional en salud. Los permisos personales no remunerados se otorgan a criterio del jefe inmediato y de Recursos Humanos.' },
+    { icon: 'fa-scale-balanced', name: 'Código de ética y conducta', date: '30/03/2025', content: 'Actuamos con honestidad e integridad en todas nuestras relaciones laborales y comerciales. Está prohibido aceptar regalos o beneficios que comprometan la imparcialidad en las decisiones.\n\nDebemos proteger la confidencialidad de la información de clientes, proveedores y colaboradores. Fomentamos un ambiente de respeto: no se tolera discriminación, acoso ni violencia en ninguna forma.' },
+    { icon: 'fa-house-laptop', name: 'Política de teletrabajo', date: '12/08/2025', content: 'El teletrabajo se autoriza para puestos y funciones que lo permitan, previa solicitud y aprobación. Durante la jornada remota el colaborador debe estar disponible en las herramientas corporativas.\n\nEl colaborador debe contar con un espacio de trabajo adecuado y una conexión estable. Las jornadas de teletrabajo se registran igual en el sistema de marcación del portal.' }
+  ];
+  const openDoc = (doc) => {
+    document.getElementById('docModalTitle').textContent = window.AAA.t(doc.name);
+    document.getElementById('docModalDate').textContent = `${window.AAA.t('Fecha de actualización')}: ${doc.date}`;
+    document.getElementById('docModalBody').textContent = doc.content;
+    document.getElementById('docModal').style.display = 'flex';
+  };
+  const closeDoc = () => { document.getElementById('docModal').style.display = 'none'; };
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    document.getElementById('docList').innerHTML = documents.map((doc, index) => `<div class="doc-row" role="button" tabindex="0" data-doc="${index}"><i class="fa-solid ${doc.icon}"></i><div><b>${t(doc.name)}</b><small>${t('Fecha de actualización')}: ${doc.date}</small></div><button type="button" class="btn-action btn-action--secondary" data-doc="${index}"><i class="fa-solid fa-eye"></i> ${t('Ver documento')}</button></div>`).join('');
+  };
+  document.getElementById('docList').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-doc]');
+    if (button) openDoc(documents[Number(button.dataset.doc)]);
+  });
+  document.getElementById('docList').addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      const row = event.target.closest('[data-doc]');
+      if (row) { event.preventDefault(); openDoc(documents[Number(row.dataset.doc)]); }
+    }
+  });
+  document.getElementById('docModalClose').addEventListener('click', closeDoc);
+  document.getElementById('docModalDone').addEventListener('click', closeDoc);
+  document.getElementById('docModal').addEventListener('click', (event) => { if (event.target === document.getElementById('docModal')) closeDoc(); });
+</script>
+</body></html>

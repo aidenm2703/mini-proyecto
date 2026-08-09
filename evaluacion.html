@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Evaluación de desempeño | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="evaluacion">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Evaluación de desempeño" data-subtitle="Evalúa tus objetivos del trimestre y tu desempeño cada 3 meses.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clipboard-check"></i> Evaluación trimestral de desempeño</h2><span class="badge badge--quarter">Q3 · Ago–Oct 2026</span></div>
+        <div class="panel__body">
+          <p class="schedule-note">Cada 3 meses administración evalúa tu desempeño.</p>
+          <div id="lastEvaluation" class="schedule-note"><strong>Última evaluación:</strong> Pendiente</div>
+          <form id="quarterlyEvaluationForm">
+            <div class="objective-list" id="objectives"></div>
+            <button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-star"></i> Guardar auto-evaluación</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const evaluationSections = [
+    { title: 'AUTOEVALUACIÓN', questions: [
+      '¿Cuáles fueron tus principales logros en este periodo?',
+      '¿Qué objetivos cumpliste y cuáles no? ¿Por qué?',
+      '¿Qué habilidades desarrollaste o fortaleciste?',
+      '¿Qué desafíos enfrentaste y cómo los resolviste?',
+      '¿En qué áreas te gustaría mejorar?',
+      '¿Qué apoyo necesitas de tu líder o del equipo para crecer?',
+      '¿Cómo calificarías tu desempeño general?'
+    ]},
+    { title: 'EVALUACIÓN MANAGER', questions: [
+      '¿Cumplió los objetivos/OKRs establecidos?',
+      'Calidad técnica del trabajo entregado',
+      'Cumplimiento de plazos y compromisos',
+      'Capacidad de resolución de problemas',
+      'Comunicación y colaboración con el equipo',
+      'Proactividad e iniciativa',
+      'Adherencia a buenas prácticas',
+      '¿Qué fortalezas destacarías?',
+      '¿Qué áreas de oportunidad identificas?',
+      '¿Está listo para asumir más responsabilidad?'
+    ], textFrom: 8},
+    { title: 'EVALUACIÓN 360°', questions: [
+      '¿Cómo calificarías la colaboración en proyectos conjuntos?',
+      '¿Es clara y efectiva su comunicación?',
+      '¿Comparte conocimiento con el equipo?',
+      '¿Cómo maneja el feedback y los conflictos?',
+      '¿Qué es lo que más valoras de trabajar con esta persona?',
+      '¿Qué podría mejorar?'
+    ], textFrom: 4},
+    { title: 'COMPETENCIAS TÉCNICAS', questions: [
+      'Calidad y mantenibilidad del código',
+      'Capacidad de diseño de soluciones',
+      'Conocimiento del stack del equipo',
+      'Participación en code reviews',
+      'Nivel de autonomía técnica'
+    ]},
+    { title: 'SOFT SKILLS', questions: [
+      'Trabajo en equipo',
+      'Adaptabilidad al cambio',
+      'Gestión del tiempo y prioridades',
+      'Liderazgo',
+      'Mentalidad de mejora continua'
+    ]},
+    { title: 'CIERRE', questions: [
+      'Objetivos para el próximo periodo',
+      'Plan de desarrollo',
+      '¿Interés en cambiar de rol o equipo?'
+    ], allText: true}
+  ];
+
+  const starRow = (name, value = 0) => `<div class="eval-estrellas" data-valor="${value}">
+    <i class="fa-regular fa-star" data-n="1"></i>
+    <i class="fa-regular fa-star" data-n="2"></i>
+    <i class="fa-regular fa-star" data-n="3"></i>
+    <i class="fa-regular fa-star" data-n="4"></i>
+    <i class="fa-regular fa-star" data-n="5"></i>
+  </div>`;
+
+  const renderLastEvaluation = () => {
+    const saved = JSON.parse(localStorage.getItem('aaa_quarterly_review') || 'null');
+    const node = document.getElementById('lastEvaluation');
+    if (node) node.innerHTML = `<strong>${window.AAA.t('Última evaluación:')}</strong> ${window.AAA.t(saved ? 'Enviada' : 'Pendiente')}`;
+  };
+
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    let n = 0;
+    document.getElementById('objectives').innerHTML = evaluationSections.map((section) => {
+      const html = section.questions.map((question, i) => {
+        n += 1;
+        const num = n;
+        const isText = section.allText || (section.textFrom !== undefined && i >= section.textFrom);
+        if (isText) {
+          return `<div class="eval-pregunta">
+            <p>${num}. ${t(question)}</p>
+            <textarea class="form-input form-textarea" name="preg_${num}" placeholder="${t('Escriba su respuesta...')}"></textarea>
+          </div>`;
+        }
+        return `<div class="eval-pregunta">
+          <p>${num}. ${t(question)}</p>
+          ${starRow(`preg_${num}`)}
+          <input type="hidden" name="preg_${num}" value="0">
+        </div>`;
+      }).join('');
+      return `<h3 class="eval-subtitle">${t(section.title)}</h3>${html}`;
+    }).join('');
+    renderLastEvaluation();
+  };
+
+  document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('fa-star') && e.target.closest('.eval-estrellas')) {
+      const container = e.target.closest('.eval-estrellas');
+      const valor = parseInt(e.target.getAttribute('data-n'));
+      container.setAttribute('data-valor', valor);
+      container.querySelectorAll('.fa-star').forEach(star => {
+        const n = parseInt(star.getAttribute('data-n'));
+        if (n <= valor) {
+          star.classList.remove('fa-regular');
+          star.classList.add('fa-solid');
+          star.style.color = '#ffb84d';
+        } else {
+          star.classList.remove('fa-solid');
+          star.classList.add('fa-regular');
+          star.style.color = '';
+        }
+      });
+      const hidden = container.parentElement.querySelector('input[type="hidden"]');
+      if (hidden) hidden.value = valor;
+    }
+  });
+
+  document.getElementById('quarterlyEvaluationForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    const answeredStars = Object.keys(data).filter((key) => key.startsWith('preg_') && data[key] !== '0').length;
+    if (answeredStars === 0 && !Object.keys(data).some((key) => key.startsWith('preg_') && data[key])) {
+      return window.AAA.showToast(window.AAA.t('Evalúe al menos una pregunta antes de guardar.'), true);
+    }
+    localStorage.setItem('aaa_quarterly_review', JSON.stringify(data));
+    renderLastEvaluation();
+    window.AAA.showToast(window.AAA.t('Auto-evaluación guardada.'));
+  });
+</script>
+</body></html>

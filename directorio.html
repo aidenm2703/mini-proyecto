@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Directorio de empleados | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="directorio">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Directorio de empleados" data-subtitle="Encuentra a tus compañeros por puesto o departamento.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-address-book"></i> Directorio de empleados</h2></div>
+        <div class="panel__body">
+          <div class="directory-tools">
+            <input id="directorySearch" class="form-input" type="text" placeholder="Buscar por nombre, puesto o departamento...">
+            <select id="directoryTeam" class="form-select" aria-label="Filtrar por departamento"><option value="todos">Todos los departamentos</option></select>
+            <select id="directoryPosition" class="form-select" aria-label="Filtrar por puesto"><option value="todos">Todos los puestos</option></select>
+          </div>
+          <p class="directory-count" id="directoryCount"></p>
+          <div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Puesto</th><th>Departamento</th><th>Teléfono de oficina</th><th>Extensión</th><th>Correo</th></tr></thead><tbody id="directoryBody"></tbody></table></div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-sitemap"></i> Organigrama de la empresa</h2></div>
+        <div class="panel__body">
+          <div class="org-chart">
+            <div class="org-node org-node--root">Gerencia General</div>
+            <div class="org-chart__grid">
+              <div class="org-node">Tecnología</div>
+              <div class="org-node">Ventas</div>
+              <div class="org-node">Recursos Humanos</div>
+              <div class="org-node">Finanzas</div>
+              <div class="org-node">Operaciones</div>
+              <div class="org-node">Marketing</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const directory = [
+    { name: 'Diego Castro', position: 'Gerente de Tecnología', dept: 'Tecnología', phone: '2244-3301', ext: 'Ext. 101', email: 'diego.castro@aaa.com' },
+    { name: 'María José Vargas', position: 'Ingeniera de software', dept: 'Tecnología', phone: '2244-3302', ext: 'Ext. 102', email: 'maria.vargas@aaa.com' },
+    { name: 'Esteban Rojas', position: 'Desarrollador frontend', dept: 'Tecnología', phone: '2244-3303', ext: 'Ext. 103', email: 'esteban.rojas@aaa.com' },
+    { name: 'Karla Morales', position: 'Analista de datos', dept: 'Tecnología', phone: '2244-3304', ext: 'Ext. 104', email: 'karla.morales@aaa.com' },
+    { name: 'Luis Eduardo Chaves', position: 'Soporte técnico', dept: 'Tecnología', phone: '2244-3305', ext: 'Ext. 105', email: 'luis.chaves@aaa.com' },
+    { name: 'Andrés Mora', position: 'Gerente de ventas', dept: 'Ventas', phone: '2244-3306', ext: 'Ext. 106', email: 'andres.mora@aaa.com' },
+    { name: 'Gabriela Navarro', position: 'Ejecutiva de ventas', dept: 'Ventas', phone: '2244-3307', ext: 'Ext. 107', email: 'gabriela.navarro@aaa.com' },
+    { name: 'Jorge Fallas', position: 'Asesor comercial', dept: 'Ventas', phone: '2244-3308', ext: 'Ext. 108', email: 'jorge.fallas@aaa.com' },
+    { name: 'Natalia Quesada', position: 'Ejecutiva de cuentas nuevas', dept: 'Ventas', phone: '2244-3309', ext: 'Ext. 109', email: 'natalia.quesada@aaa.com' },
+    { name: 'Manuel Sánchez', position: 'Especialista de posventa', dept: 'Ventas', phone: '2244-3310', ext: 'Ext. 110', email: 'manuel.sanchez@aaa.com' },
+    { name: 'Ana Patricia Solano', position: 'Coordinadora de talento', dept: 'Recursos Humanos', phone: '2244-3311', ext: 'Ext. 111', email: 'ana.solano@aaa.com' },
+    { name: 'Cindy Herrera', position: 'Analista de nómina', dept: 'Recursos Humanos', phone: '2244-3312', ext: 'Ext. 112', email: 'cindy.herrera@aaa.com' },
+    { name: 'Roberto Alfaro', position: 'Reclutador', dept: 'Recursos Humanos', phone: '2244-3313', ext: 'Ext. 113', email: 'roberto.alfaro@aaa.com' },
+    { name: 'Paula Jiménez', position: 'Especialista en beneficios', dept: 'Recursos Humanos', phone: '2244-3314', ext: 'Ext. 114', email: 'paula.jimenez@aaa.com' },
+    { name: 'Fernando Agüero', position: 'Asistente de RRHH', dept: 'Recursos Humanos', phone: '2244-3315', ext: 'Ext. 115', email: 'fernando.aguero@aaa.com' },
+    { name: 'Ana Rojas', position: 'Contadora general', dept: 'Finanzas', phone: '2244-3316', ext: 'Ext. 116', email: 'ana.rojas@aaa.com' },
+    { name: 'Diego Chaves', position: 'Analista financiero', dept: 'Finanzas', phone: '2244-3317', ext: 'Ext. 117', email: 'diego.chaves@aaa.com' },
+    { name: 'Melissa Blanco', position: 'Asistente contable', dept: 'Finanzas', phone: '2244-3318', ext: 'Ext. 118', email: 'melissa.blanco@aaa.com' },
+    { name: 'Jonathan Picado', position: 'Auditor interno', dept: 'Finanzas', phone: '2244-3319', ext: 'Ext. 119', email: 'jonathan.picado@aaa.com' },
+    { name: 'Silvia Cordero', position: 'Especialista de presupuesto', dept: 'Finanzas', phone: '2244-3320', ext: 'Ext. 120', email: 'silvia.cordero@aaa.com' },
+    { name: 'María Fernanda López', position: 'Coordinadora de operaciones', dept: 'Operaciones', phone: '2244-3321', ext: 'Ext. 121', email: 'maria.lopez@aaa.com' },
+    { name: 'Sofía Rojas', position: 'Especialista de inventario', dept: 'Operaciones', phone: '2244-3322', ext: 'Ext. 122', email: 'sofia.rojas@aaa.com' },
+    { name: 'Kevin Ureña', position: 'Auxiliar de bodega', dept: 'Operaciones', phone: '2244-3323', ext: 'Ext. 123', email: 'kevin.urena@aaa.com' },
+    { name: 'Pamela Murillo', position: 'Planificadora logística', dept: 'Operaciones', phone: '2244-3324', ext: 'Ext. 124', email: 'pamela.murillo@aaa.com' },
+    { name: 'Oscar Valverde', position: 'Analista de operaciones', dept: 'Operaciones', phone: '2244-3325', ext: 'Ext. 125', email: 'oscar.valverde@aaa.com' },
+    { name: 'Lucía Vargas', position: 'Gerente de marketing', dept: 'Marketing', phone: '2244-3326', ext: 'Ext. 126', email: 'lucia.vargas@aaa.com' },
+    { name: 'Fabián Castro', position: 'Community manager', dept: 'Marketing', phone: '2244-3327', ext: 'Ext. 127', email: 'fabian.castro@aaa.com' },
+    { name: 'Rebeca Mora', position: 'Diseñadora gráfica', dept: 'Marketing', phone: '2244-3328', ext: 'Ext. 128', email: 'rebeca.mora@aaa.com' },
+    { name: 'Alonso Vega', position: 'Especialista SEO', dept: 'Marketing', phone: '2244-3329', ext: 'Ext. 129', email: 'alonso.vega@aaa.com' },
+    { name: 'Daniela Solís', position: 'Redactora de contenido', dept: 'Marketing', phone: '2244-3330', ext: 'Ext. 130', email: 'daniela.solis@aaa.com' }
+  ];
+  const departments = ['Tecnología', 'Ventas', 'Recursos Humanos', 'Finanzas', 'Operaciones', 'Marketing'];
+  const renderDirectory = () => {
+    const t = window.AAA.t;
+    const query = document.getElementById('directorySearch').value.trim().toLowerCase();
+    const dept = document.getElementById('directoryTeam').value;
+    const position = document.getElementById('directoryPosition').value;
+    const rows = directory.filter((p) => (dept === 'todos' || p.dept === dept) && (position === 'todos' || p.position === position) && (!query || `${p.name} ${p.position} ${p.dept}`.toLowerCase().includes(query)));
+    document.getElementById('directoryCount').innerHTML = t('Mostrando') + ' <b>' + rows.length + '</b> ' + t('de') + ' ' + directory.length + ' ' + t('colaboradores');
+    document.getElementById('directoryBody').innerHTML = rows.length ? rows.map((p) => `<tr><td>${window.AAA.esc(p.name)}</td><td>${window.AAA.esc(p.position)}</td><td>${t(p.dept)}</td><td>${window.AAA.esc(p.phone)}</td><td>${window.AAA.esc(p.ext)}</td><td>${window.AAA.esc(p.email)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="6">' + t('No hay resultados.') + '</td></tr>';
+  };
+  const fillSelects = () => {
+    const t = window.AAA.t;
+    const deptSelect = document.getElementById('directoryTeam');
+    const positionSelect = document.getElementById('directoryPosition');
+    deptSelect.innerHTML = '<option value="todos">' + t('Todos los departamentos') + '</option>' + departments.map((d) => `<option value="${d}">${t(d)}</option>`).join('');
+    positionSelect.innerHTML = '<option value="todos">' + t('Todos los puestos') + '</option>' + [...new Set(directory.map((p) => p.position))].map((position) => `<option value="${position}">${window.AAA.esc(position)}</option>`).join('');
+  };
+  window.renderPage = () => { fillSelects(); renderDirectory(); };
+  ['input', 'change'].forEach((eventName) => document.getElementById('directorySearch').addEventListener(eventName, renderDirectory));
+  ['input', 'change'].forEach((eventName) => document.getElementById('directoryTeam').addEventListener(eventName, renderDirectory));
+  ['input', 'change'].forEach((eventName) => document.getElementById('directoryPosition').addEventListener(eventName, renderDirectory));
+</script>
+</body></html>
