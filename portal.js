@@ -33,12 +33,13 @@
   let visibleNotifications = [];
 
   function buildNotifications() {
-    const alerts = JSON.parse(localStorage.getItem('aaa_security_alerts') || '[]');
-    const alertItems = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
     const taskUpdates = JSON.parse(localStorage.getItem('aaa_task_notifications') || '[]').slice(0, 5).map((item) => ({ icon: item.done ? 'fa-circle-check' : 'fa-rotate-left', title: item.done ? 'Tarea completada' : 'Tarea reabierta', text: `${item.employee}: ${item.title}`, time: item.time }));
-    const meetings = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]');
-    const meetingItems = meetings.slice(0, 5).map((item) => ({ icon: 'fa-video', title: 'Invitación a reunión', text: `${item.title} · ${item.date}`, detail: item.detail, time: item.time }));
-    visibleNotifications = [...meetingItems, ...taskUpdates, ...alertItems, ...DEFAULT_NOTIFICATIONS];
+    const meetings = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]').filter((item) => !item.invitees || item.invitees.includes(employeeName()));
+    const meetingItems = meetings.slice(0, 5).map((item) => ({ icon: 'fa-video', title: 'Invitación a reunión', text: `${item.title} · ${item.date}`, detail: item.detail, time: item.time, meeting: item }));
+    const accountItems = JSON.parse(localStorage.getItem('aaa_user_notifications') || '[]').filter((item) => item.employee === employeeName()).slice(0, 5).map((item) => ({ icon: 'fa-user-check', title: item.title, text: item.text, time: item.time }));
+    const permits = JSON.parse(localStorage.getItem('aaa_permit_notifications') || '[]').filter((item) => !item.employee || item.employee === employeeName());
+    const permitItems = permits.slice(0, 5).map((item) => ({ icon: 'fa-notes-medical', title: `Solicitud ${item.status}`, text: `${item.type}: ${item.reason}`, detail: item.detail || `${item.start} al ${item.end}`, time: item.time || 'Ahora' }));
+    visibleNotifications = [...meetingItems, ...accountItems, ...permitItems, ...taskUpdates, ...DEFAULT_NOTIFICATIONS];
   }
 
   function renderNotifications() {
@@ -46,7 +47,7 @@
     const list = document.getElementById('portalNotificationList');
     if (!badge || !list) return;
     buildNotifications();
-    list.innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${esc(t(notice.title))}</b><small>${esc(t(notice.text))}</small></span><time>${esc(notice.time)}</time></button>`).join('');
+    list.innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${esc(t(notice.title))}</b><small>${esc(t(notice.text))}</small>${notice.meeting ? '<em>Unirse ahora</em>' : ''}</span><time>${esc(notice.time)}</time></button>`).join('');
     const readCount = Number(localStorage.getItem('aaa_notifications_read') || 0);
     const unread = Math.max(0, visibleNotifications.length - readCount);
     badge.textContent = unread > 0 ? String(unread) : '';
@@ -109,6 +110,7 @@
         if (!item) return;
         const notice = visibleNotifications[Number(item.dataset.notification)];
         document.getElementById('portalNotificationDetail').innerHTML = `<b>${esc(t(notice.title))}</b><span>${esc(t(notice.detail || notice.text))}</span>`;
+        if (notice.meeting) startCall(['Administrador', employeeName()], notice.meeting.title);
       });
       document.getElementById('btnClearPortalNotifications').addEventListener('click', () => {
         localStorage.setItem('aaa_notifications_read', String(visibleNotifications.length));
@@ -291,14 +293,15 @@
   // ================================================================
   //  Llamada simulada estilo videollamada (administrador).
   // ================================================================
-  function startCall(names) {
+  function startCall(names, meetingTitle = 'Reunión') {
     const people = Array.isArray(names) ? names : [names];
     const overlay = document.createElement('div');
     overlay.className = 'call-modal';
     overlay.innerHTML =
       '<div class="call-modal__box">' +
       '<div class="call-modal__avatar"><i class="fa-solid fa-user-tie"></i></div>' +
-      '<p class="call-modal__name">' + esc(people.join(', ')) + '</p>' +
+      '<p class="call-modal__name">' + esc(meetingTitle) + '</p>' +
+      '<p class="call-modal__participants">Participantes: ' + esc(people.join(', ')) + '</p>' +
       '<p class="call-modal__status"><i class="fa-solid fa-spinner fa-spin"></i> Conectando…</p>' +
       '<div class="call-modal__actions">' +
       '<button type="button" class="call-modal__btn call-modal__btn--mute" title="Silenciar"><i class="fa-solid fa-microphone"></i></button>' +
@@ -312,7 +315,7 @@
     const video = overlay.querySelector('.call-modal__btn--video');
     const finish = () => { overlay.remove(); showToast('Llamada finalizada.'); };
     const timer = window.setTimeout(() => {
-      if (status) status.innerHTML = '<i class="fa-solid fa-phone-volume"></i> En llamada con ' + esc(people.join(', '));
+      if (status) status.innerHTML = '<i class="fa-solid fa-phone-volume"></i> Hablando: ' + esc(people.join(', '));
     }, 2600);
     hang.addEventListener('click', () => { window.clearTimeout(timer); finish(); });
     mute.addEventListener('click', () => {

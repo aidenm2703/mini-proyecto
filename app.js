@@ -108,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elevatorMusic) { window.clearInterval(elevatorMusic); elevatorMusic = null; }
       currentUser = user;
       localStorage.setItem('aaa_current_user', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
+      renderNotifications();
       stopFaceScan();
       updateUserInterface();
       $('loginScreen').style.display = 'none';
@@ -287,7 +288,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const alerts = JSON.parse(localStorage.getItem(securityStorage || 'aaa_security_alerts') || '[]');
     const items = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
     const taskUpdates = JSON.parse(localStorage.getItem('aaa_task_notifications') || '[]').slice(0, 5).map((item) => ({ icon: item.done ? 'fa-circle-check' : 'fa-rotate-left', title: item.done ? 'Tarea completada' : 'Tarea reabierta', text: `${item.employee}: ${item.title}`, detail: `${item.employee} marcó la tarea “${item.title}” como ${item.done ? 'completada' : 'pendiente'}.`, time: item.time }));
-    visibleNotifications = [...taskUpdates, ...items.map((item) => ({ ...item, detail: 'Se detectó un intento de acceso. Puede revisar la información de seguridad y confirmar que la persona use sus credenciales correctas.' })), ...notifications];
+    const userName = currentUser?.name;
+    const meetingItems = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]').filter((item) => userName && (!item.invitees || item.invitees.includes(userName))).slice(0, 5).map((item) => ({ icon: 'fa-video', title: 'Invitación a reunión', text: `${item.title} · ${item.date}`, detail: item.detail, time: item.time || 'Ahora', meeting: item }));
+    const accountItems = JSON.parse(localStorage.getItem('aaa_user_notifications') || '[]').filter((item) => item.employee === userName).slice(0, 5).map((item) => ({ icon: 'fa-user-check', title: item.title, text: item.text, time: item.time || 'Ahora' }));
+    const securityItems = currentUser?.role === 'Admin' ? items.map((item) => ({ ...item, detail: 'Se detectó un intento de acceso. Puede revisar la información de seguridad y confirmar que la persona use sus credenciales correctas.' })) : [];
+    visibleNotifications = [...meetingItems, ...accountItems, ...taskUpdates, ...securityItems, ...notifications];
     $('notificationList').innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
     $('notificationDetail').textContent = 'Seleccione una notificación para ver el detalle.';
     // Solo se muestra el número de notificaciones sin leer; 0 oculta el distintivo.
@@ -303,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
     panel.hidden = !panel.hidden;
     $('btnNotifications').setAttribute('aria-expanded', String(!panel.hidden));
   });
-  $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail)}</span>`; });
+  $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail || notice.text)}</span>`; if (notice.meeting) openGroupMeeting(notice.meeting.title, notice.meeting.invitees || [currentUser?.name || 'Colaborador']); });
   $('btnClearNotifications').addEventListener('click', () => { localStorage.setItem('aaa_notifications_read', String(visibleNotifications.length)); renderNotifications(); $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); showToast('Notificaciones marcadas como leídas.'); });
   document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
 
@@ -499,9 +504,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEmployeeSurvey();
   if ($('employeeSurvey')) $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:($('surveyComment')||{}).value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();renderEmployeeSurvey();showToast('Encuesta enviada.');});
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${i18nText(q)}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
-  $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
+  $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);const name=$('employeeName').value.trim();list.push({name,username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));const notices=JSON.parse(localStorage.getItem('aaa_user_notifications')||'[]');notices.unshift({employee:name,title:'Bienvenido/a a AAA Software',text:'Tu cuenta fue creada. Ya puedes ingresar al portal.',time:'Ahora'});localStorage.setItem('aaa_user_notifications',JSON.stringify(notices));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado y notificado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
-  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td><td><button type="button" class="btn-row" data-call="${escapeHtml(x.name)}" title="Llamar"><i class="fa-solid fa-phone"></i></button><button type="button" class="btn-row" data-email="${escapeHtml(x.name)}" title="Correo"><i class="fa-solid fa-envelope"></i></button></td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
+  const medicalStorage = 'aaa_medical_requests';
+  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td><td><button type="button" class="btn-row" data-evaluate="${escapeHtml(x.name)}" title="Evaluar desempeño"><i class="fa-solid fa-clipboard-check"></i></button><button type="button" class="btn-row" data-call="${escapeHtml(x.name)}" title="Llamar"><i class="fa-solid fa-phone"></i></button><button type="button" class="btn-row" data-email="${escapeHtml(x.name)}" title="Correo"><i class="fa-solid fa-envelope"></i></button></td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderMedicalRequests();renderAssignedTasks();}
   function renderAssignedTasks(){const filter=$('taskPriorityFilter').value, tasks=assignments().filter(task=>filter==='todas'||task.priority===filter);$('assignedTasksBody').innerHTML=tasks.length?tasks.sort((a,b)=>({alta:0,media:1,baja:2}[a.priority]-({alta:0,media:1,baja:2}[b.priority]))).map(task=>`<tr><td>${escapeHtml(task.employee)}</td><td>${escapeHtml(task.title)}</td><td>${task.date}</td><td><span class="task-priority task-priority--${task.priority}">${capitalize(task.priority)}</span></td><td>${task.done?'Completada':'Pendiente'}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="5">No hay tareas para este filtro.</td></tr>';}
   $('taskPriorityFilter').addEventListener('change',renderAssignedTasks);
   $('btnClearTasks').addEventListener('click',()=>{if(!assignments().length)return showToast('No hay tareas para limpiar.');localStorage.removeItem(assignmentStorage);localStorage.removeItem('aaa_task_notifications');renderEmployeeAdmin();renderTasks();showToast('Todas las tareas asignadas fueron eliminadas.');});
@@ -514,12 +520,52 @@ document.addEventListener('DOMContentLoaded', () => {
   ---------------------------------------------------------------- */
   const employeeList = () => [{ name: 'María Fernanda López', username: 'usuario1' }, ...employees()];
   $('employeesBody').addEventListener('click', (event) => {
-    const button = event.target.closest('button[data-call], button[data-email]');
+    const button = event.target.closest('button[data-call], button[data-email], button[data-evaluate]');
     if (!button) return;
-    const employee = employeeList().find((item) => item.name === (button.dataset.call || button.dataset.email));
-    if (!employee) return;
-    if (button.hasAttribute('data-call')) openCallModal(employee.name);
-    else openEmailModal(employee);
+    if (button.dataset.call) return openCallModal(button.dataset.call);
+    if (button.dataset.evaluate) return openManagerEvaluation(button.dataset.evaluate);
+    const employee = employeeList().find((item) => item.name === button.dataset.email) || { name: button.dataset.email, username: '' };
+    openEmailModal(employee);
+  });
+
+  const managerQuestions = ['¿Cumplió los objetivos/OKRs establecidos?', 'Calidad técnica del trabajo entregado', 'Cumplimiento de plazos y compromisos', 'Capacidad de resolución de problemas', 'Comunicación y colaboración con el equipo', 'Proactividad e iniciativa'];
+  let employeeBeingEvaluated = '';
+  function openManagerEvaluation(name) {
+    employeeBeingEvaluated = name;
+    $('managerEvaluationEmployee').textContent = `Colaborador: ${name}`;
+    $('managerEvaluationQuestions').innerHTML = managerQuestions.map((question, index) => `<div class="form-group"><label>${index + 8}. ${question}</label><select class="form-select" name="q${index}" required><option value="">Seleccione una calificación</option><option value="1">1 - Debe mejorar</option><option value="2">2 - Regular</option><option value="3">3 - Cumple</option><option value="4">4 - Muy bien</option><option value="5">5 - Excelente</option></select></div>`).join('');
+    $('managerEvaluationModal').style.display = 'flex';
+  }
+  function closeManagerEvaluation() { $('managerEvaluationModal').style.display = 'none'; }
+  $('btnCerrarEvaluacion').addEventListener('click', closeManagerEvaluation);
+  $('managerEvaluationModal').addEventListener('click', (event) => { if (event.target === $('managerEvaluationModal')) closeManagerEvaluation(); });
+  $('managerEvaluationForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const scores = Object.fromEntries(new FormData(event.currentTarget).entries());
+    if (Object.values(scores).some((value) => !value)) return showToast('Califique todas las preguntas.', true);
+    const reviews = JSON.parse(localStorage.getItem('aaa_manager_evaluations') || '[]');
+    reviews.unshift({ employee: employeeBeingEvaluated, scores, date: new Date().toLocaleDateString('es-CR') });
+    localStorage.setItem('aaa_manager_evaluations', JSON.stringify(reviews));
+    closeManagerEvaluation();
+    showToast(`Evaluación de desempeño guardada para ${employeeBeingEvaluated}.`);
+  });
+
+  function renderMedicalRequests() {
+    const body = $('medicalRequestsBody'); if (!body) return;
+    const requests = JSON.parse(localStorage.getItem(medicalStorage) || '[]');
+    body.innerHTML = requests.length ? requests.map((request, index) => `<tr><td>${escapeHtml(request.employee)}</td><td>${request.date}</td><td>${escapeHtml(request.reason)}</td><td><span class="badge badge--${request.status === 'Aprobada' ? 'available' : request.status === 'Denegada' ? 'warning' : 'pending'}">${request.status}</span></td><td>${request.status === 'Pendiente' ? `<button class="btn-row" data-medical="approve:${index}" title="Aprobar"><i class="fa-solid fa-check"></i></button><button class="btn-row btn-row--delete" data-medical="deny:${index}" title="Denegar"><i class="fa-solid fa-xmark"></i></button>` : '—'}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="5">No hay solicitudes médicas pendientes.</td></tr>';
+  }
+  $('medicalRequestsBody').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-medical]'); if (!button) return;
+    const [decision, position] = button.dataset.medical.split(':'); const requests = JSON.parse(localStorage.getItem(medicalStorage) || '[]'); const request = requests[Number(position)]; if (!request) return;
+    request.status = decision === 'approve' ? 'Aprobada' : 'Denegada'; localStorage.setItem(medicalStorage, JSON.stringify(requests));
+    const notices = JSON.parse(localStorage.getItem('aaa_permit_notifications') || '[]'); notices.unshift({ employee: request.employee, type: 'Cita médica', reason: request.reason, start: request.date, end: request.date, status: request.status, detail: `Tu solicitud para el ${request.date} fue ${request.status.toLowerCase()}.`, time: 'Ahora' }); localStorage.setItem('aaa_permit_notifications', JSON.stringify(notices));
+    renderMedicalRequests(); showToast(`Solicitud ${request.status.toLowerCase()}.`);
+  });
+  $('medicalRequestForm').addEventListener('submit', (event) => {
+    event.preventDefault(); const date = $('medicalDate').value, reason = $('medicalReason').value.trim(); if (!date || !reason) return;
+    const requests = JSON.parse(localStorage.getItem(medicalStorage) || '[]'); requests.unshift({ employee: currentEmployeeName(), date, reason, status: 'Pendiente' }); localStorage.setItem(medicalStorage, JSON.stringify(requests));
+    $('medicalRequestStatus').textContent = 'Solicitud enviada al administrador para revisión.'; $('medicalRequestStatus').className = 'justification-status justification-status--pending'; event.currentTarget.reset(); showToast('Solicitud de cita médica enviada.');
   });
 
   function openEmailModal(employee) {
@@ -584,12 +630,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!invitees.length) return showToast('Seleccione al menos un empleado.', true);
     const dateLabel = new Date(`${date}T${time}`).toLocaleDateString('es-GT', { weekday: 'long', day: 'numeric', month: 'long' });
     const list = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]');
-    list.unshift({ title, date: dateLabel, time, detail: `Invitación a “${title}”. Lugar: ${place || 'Por definir'}. Empleados: ${invitees.join(', ')}.` });
+    list.unshift({ title, date: dateLabel, time, invitees, detail: `Invitación a “${title}”. Lugar: ${place || 'Por definir'}. Empleados: ${invitees.join(', ')}.` });
     localStorage.setItem('aaa_meeting_notifications', JSON.stringify(list));
     closeMeetingModal();
     playSuccessSound();
     showToast('Invitación a reunión enviada a los seleccionados.');
+    window.setTimeout(() => openGroupMeeting(title, invitees), 5000);
   });
+
+  function openGroupMeeting(title, invitees) {
+    const overlay = document.createElement('div'); overlay.className = 'modal-overlay'; overlay.style.display = 'flex';
+    overlay.innerHTML = `<div class="modal-box"><div class="modal-box__header"><h3 class="modal-box__title"><i class="fa-solid fa-video"></i> ${escapeHtml(title)}</h3></div><div class="call-box"><p class="call-box__state"><i class="fa-solid fa-spinner fa-spin"></i> Conectando participantes...</p><div class="meeting-participants">${['Administrador', ...invitees].map(name => `<span><i class="fa-solid fa-user-circle"></i> ${escapeHtml(name)} <b>Conectando</b></span>`).join('')}</div><button class="btn-action btn-action--danger" type="button"><i class="fa-solid fa-phone-slash"></i> Finalizar llamada</button></div></div>`;
+    document.body.appendChild(overlay); const state = overlay.querySelector('.call-box__state');
+    const timer = window.setTimeout(() => { state.innerHTML = '<i class="fa-solid fa-volume-high"></i> En llamada'; overlay.querySelectorAll('.meeting-participants b').forEach(node => { node.textContent = 'Hablando'; }); }, 1800);
+    overlay.querySelector('button').addEventListener('click', () => { window.clearTimeout(timer); overlay.remove(); showToast('Llamada finalizada.'); });
+  }
 
 
   Object.entries(modules).forEach(([key, config]) => setupModule(key, config));
@@ -730,6 +785,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('perfilNombre').value = saved.name || currentUser?.name || '';
     $('perfilCorreo').value = saved.email || saved.correo || '';
     $('perfilTelefono').value = saved.telefono || saved.phone || '';
+    $('perfilCargo').value = saved.cargo || saved.position || (currentUser?.role === 'Admin' ? 'Administrador' : 'Colaborador');
     $('modalPerfil').style.display = 'flex';
   }
 
@@ -754,6 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       name: $('perfilNombre').value.trim() || current.name,
       email: $('perfilCorreo').value.trim(),
       telefono: $('perfilTelefono').value.trim(),
+      cargo: $('perfilCargo').value.trim(),
     };
     localStorage.setItem('aaa_current_user', JSON.stringify(updated));
     updateAuthUI();

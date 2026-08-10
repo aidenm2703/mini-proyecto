@@ -44,6 +44,7 @@
     { m: 11, d: 25, name: 'Navidad', workers: ['Camila Rojas', 'Diego Vargas', 'Fernando Ruiz'], pay: true }
   ];
   const holidayKey = (day, month) => holidays.find((h) => h.m === month && h.d === day);
+  const approvedMedicalRequest = (day, month) => JSON.parse(localStorage.getItem('aaa_medical_requests') || '[]').find((request) => request.status === 'Aprobada' && request.date === `${calendarYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
   window.renderPage = () => {
     const t = window.AAA.t;
     const esc = window.AAA.esc;
@@ -71,9 +72,11 @@
           const weekday = new Date(calendarYear, monthIndex, day).getDay();
           const free = weekday === 0 || weekday === 6;
           const holiday = holidayKey(day, monthIndex);
+          const medical = approvedMedicalRequest(day, monthIndex);
           if (holiday) {
             return `<div class="calendar-day holiday-day ${next === holiday ? 'holiday-day--next' : ''}"><b>${day}</b><small class="holiday-pay">${holiday.pay ? t('Pago doble') : t('Feriado')}</small><small class="holiday-names">${t(holiday.name)}<br>${holiday.workers.map((w) => esc(w)).join(', ')}</small></div>`;
           }
+          if (medical) return `<div class="calendar-day calendar-day--medical"><b>${day}</b><small>Cita médica</small><small>${esc(medical.reason)}</small></div>`;
           return `<div class="calendar-day ${free ? 'calendar-day--free' : 'calendar-day--work'}"><b>${day}</b><small>${free ? t('Libre') : t('Laboral')}</small></div>`;
         });
       return `<div class="holiday-month"><h4>${t(month)} ${calendarYear}</h4><div class="work-calendar">${cells}</div></div>`;

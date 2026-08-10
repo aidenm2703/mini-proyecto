@@ -43,22 +43,28 @@
   const enrolledKey = 'aaa_enrolled_courses';
   const getEnrolled = () => JSON.parse(localStorage.getItem(enrolledKey) || '[]');
   const downloadCertificate = (course) => {
-    const text = `AAA Software\nCertificado de capacitación\n\nCurso: ${course.name}\nFecha de finalización: ${course.date}\nEstado: ${course.status}`;
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Certificado-${course.name.replace(/[^a-z0-9]+/gi, '-')}.txt`;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    window.AAA.showToast(`${window.AAA.t('Certificado descargado.')} — ${window.AAA.t(course.name)}`);
+    const employee = window.AAA.employeeName();
+    const rows = [
+      { band: true, bandHeight: 56, parts: [{ text: 'AAA Software', x: 50, bold: true, size: 18 }, { text: 'CERTIFICADO DE CAPACITACIÓN', x: 50, size: 10 }], gap: 75 },
+      { text: 'Se certifica que', x: 50, size: 12, gap: 25 },
+      { text: employee, x: 50, bold: true, size: 20, gap: 38 },
+      { text: 'ha completado satisfactoriamente el curso', x: 50, size: 12, gap: 25 },
+      { text: course.name, x: 50, bold: true, size: 16, wrap: true, maxChars: 52, gap: 45 },
+      { sep: true, gap: 30 },
+      { text: `Fecha de finalización: ${course.date}`, x: 50, size: 12, gap: 25 },
+      { text: 'Estado: Completado', x: 50, size: 12, gap: 25 },
+      { text: 'AAA Software', x: 50, bold: true, size: 12, gap: 20 }
+    ];
+    const filename = `Certificado-${employee}-${course.name}`.replace(/[^a-z0-9]+/gi, '-').replace(/-$/, '') + '.pdf';
+    window.AAA.pdf.download(rows, filename);
+    window.AAA.showToast(`Certificado PDF descargado: ${course.name}`);
   };
   window.renderPage = () => {
     const t = window.AAA.t;
     const enrolled = getEnrolled();
     document.getElementById('courseGrid').innerHTML = courses.map((course, index) => {
       const isEnrolled = enrolled.includes(course.name);
-      return `<div class="course-card"><i class="fa-solid ${course.icon}"></i><b>${window.AAA.esc(t(course.name))}</b><span class="course-meta"><small><i class="fa-solid fa-building-columns"></i>${window.AAA.esc(t(course.platform))}</small></span><span class="badge ${isEnrolled ? 'badge--warning' : 'badge--pending'}">${t(isEnrolled ? 'Inscrito' : course.status)}</span><div class="course-actions"><button type="button" class="btn-action btn-action--primary" data-course="${index}"><i class="fa-solid ${isEnrolled ? 'fa-circle-check' : 'fa-user-plus'}"></i> ${t(isEnrolled ? 'Inscrito' : 'Inscribirse')}</button>${isEnrolled ? `<button type="button" class="btn-action btn-action--secondary" data-unenroll="${index}"><i class="fa-solid fa-user-minus"></i> ${t('Desinscribirse')}</button>` : ''}</div></div>`;
+      return `<div class="course-card"><i class="fa-solid ${course.icon}"></i><b>${window.AAA.esc(t(course.name))}</b><span class="course-meta"><small><i class="fa-solid fa-building-columns"></i>${window.AAA.esc(t(course.platform))}</small></span><span class="badge ${isEnrolled ? 'badge--enrolled' : 'badge--pending'}">${t(isEnrolled ? 'Inscrito' : course.status)}</span><div class="course-actions"><button type="button" class="btn-action btn-action--primary" data-course="${index}" ${isEnrolled ? 'disabled' : ''}><i class="fa-solid ${isEnrolled ? 'fa-circle-check' : 'fa-user-plus'}"></i> ${t(isEnrolled ? 'Inscrito' : 'Inscribirse')}</button>${isEnrolled ? `<button type="button" class="btn-action btn-action--secondary" data-unenroll="${index}"><i class="fa-solid fa-user-minus"></i> ${t('Desinscribirse')}</button>` : ''}</div></div>`;
     }).join('');
     document.getElementById('completedBody').innerHTML = completedCourses.map((course, index) => `<tr><td>${window.AAA.esc(t(course.name))}</td><td>${course.date}</td><td><span class="badge badge--available">${t(course.status)}</span></td><td><button type="button" class="btn-action btn-action--secondary" data-cert="${index}"><i class="fa-solid fa-download"></i> ${t('Descargar')}</button></td></tr>`).join('');
   };
