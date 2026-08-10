@@ -32,9 +32,15 @@
     <div class="login-container">
       <div class="login-box">
 
+        <!-- Volver a la página principal -->
+        <a href="landpage.html" class="btn-back-login" aria-label="Volver a la página principal">
+          <i class="fa-solid fa-arrow-left"></i>
+          Volver
+        </a>
+
         <!-- Logo del login -->
         <div class="login-logo">
-          <i class="fa-solid fa-cube"></i>
+          <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
         </div>
 
         <h1 class="login-title">Bienvenido al sistema de login</h1>
@@ -119,7 +125,7 @@
           </div>
           <table class="login-hint__table">
             <tr>
-              <td>admin / admin123</td>
+              <td>admin1 / admin123</td>
               <td><span class="role-dot role-dot--admin"></span>Administrador</td>
             </tr>
             <tr>
@@ -152,7 +158,7 @@
 
       <!-- Logo/Marca del sidebar -->
       <div class="sidebar-brand">
-        <i class="fa-solid fa-cube"></i>
+        <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
         <span class="sidebar-brand__text">AdminSystem</span>
       </div>
 
@@ -160,57 +166,57 @@
       <nav class="sidebar-nav">
         <ul class="sidebar-nav__list">
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link active" data-section="dashboard">
+            <a href="#dashboard" class="sidebar-nav__link active" data-section="dashboard">
               <i class="fa-solid fa-gauge-high"></i>
               <span class="sidebar-nav__text">Dashboard</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="clientes">
+            <a href="#clientes" class="sidebar-nav__link" data-section="clientes">
               <i class="fa-solid fa-users"></i>
               <span class="sidebar-nav__text">Clientes</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="productos">
+            <a href="#productos" class="sidebar-nav__link" data-section="productos">
               <i class="fa-solid fa-box"></i>
               <span class="sidebar-nav__text">Productos</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="proveedores">
+            <a href="#proveedores" class="sidebar-nav__link" data-section="proveedores">
               <i class="fa-solid fa-truck"></i>
               <span class="sidebar-nav__text">Proveedores</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="encuestas">
+            <a href="#encuestas" class="sidebar-nav__link" data-section="encuestas">
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Encuestas</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="trazabilidad">
+            <a href="#trazabilidad" class="sidebar-nav__link" data-section="trazabilidad">
               <i class="fa-solid fa-clipboard-list"></i><span class="sidebar-nav__text">Trazabilidad</span>
             </a>
           </li>
           <li class="admin-only">
-            <a href="#" class="sidebar-nav__link" data-section="empleados">
+            <a href="#empleados" class="sidebar-nav__link" data-section="empleados">
               <i class="fa-solid fa-user-plus"></i><span class="sidebar-nav__text">Empleados y tareas</span>
             </a>
           </li>
           <!-- Opciones exclusivas del colaborador/usuario. -->
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miPortal">
+            <a href="#miPortal" class="sidebar-nav__link" data-section="miPortal">
               <i class="fa-solid fa-calendar-check"></i><span class="sidebar-nav__text">Mi asistencia</span>
             </a>
           </li>
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miCalendario">
+            <a href="calendario.html" class="sidebar-nav__link" data-section="miCalendario" data-new-tab="true">
               <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario laboral</span>
             </a>
           </li>
           <li class="user-only">
-            <a href="#" class="sidebar-nav__link" data-section="miEncuesta">
+            <a href="encuesta-usuario.html" class="sidebar-nav__link" data-section="miEncuesta" data-new-tab="true">
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Mi encuesta</span>
             </a>
           </li>
@@ -261,10 +267,21 @@
         <!-- Acciones del header -->
         <div class="main-header__actions">
           <!-- Notificaciones (decorativo pero funcional para la UI) -->
-          <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones">
+          <div class="header-tools">
+          <button id="btnTheme" class="header-icon-btn" aria-label="Cambiar modo de color" title="Cambiar modo de color"><i class="fa-solid fa-moon"></i></button>
+          <label class="language-picker" for="languageSelect" title="Cambiar idioma"><i class="fa-solid fa-language"></i><select id="languageSelect" aria-label="Cambiar idioma"><option value="es">ES</option><option value="en">EN</option></select></label>
+          <div class="notification-wrap">
+          <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones" aria-expanded="false">
             <i class="fa-solid fa-bell"></i>
             <span class="header-icon-btn__badge">3</span>
           </button>
+          <div id="notificationPanel" class="notification-panel" hidden>
+            <div class="notification-panel__header"><strong>Notificaciones</strong><button id="btnClearNotifications" type="button">Marcar leídas</button></div>
+            <div id="notificationList" class="notification-list"></div>
+            <div id="notificationDetail" class="notification-detail" aria-live="polite">Seleccione una notificación para ver el detalle.</div>
+          </div>
+          </div>
+          </div>
 
           <!-- Info del usuario en el header -->
           <div class="header-user">
@@ -557,10 +574,10 @@
                 </div>
 
                 <div class="form-group">
-                  <label for="productoEstado">Estado</label>
+                  <label for="productoEstado">Inventario</label>
                   <select id="productoEstado" class="form-select">
                     <option value="disponible">Disponible</option>
-                    <option value="agotado">Agotado</option>
+                    <option value="bajo">Bajo</option>
                     <option value="descontinuado">Descontinuado</option>
                   </select>
                 </div>
@@ -602,7 +619,7 @@
                       <th>Categoría</th>
                       <th>Precio</th>
                       <th>Stock</th>
-                      <th>Estado</th>
+                      <th>Inventario</th>
                       <th>Acciones</th>
                     </tr>
                   </thead>
@@ -762,6 +779,7 @@
         <section id="secEmpleados" class="content-section admin-only" aria-label="Empleados y tareas">
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-user-plus"></i> Agregar empleado</h2></div><div class="panel__body"><form id="employeeForm" class="form-grid"><div class="form-group"><label for="employeeName">Nombre completo</label><input id="employeeName" class="form-input" required placeholder="Ej. Ana López"></div><div class="form-group"><label for="employeeUsername">Usuario</label><input id="employeeUsername" class="form-input" required placeholder="ana.lopez"></div><div class="form-group form-group--full"><label for="employeePassword">Contraseña inicial</label><input id="employeePassword" type="password" class="form-input" required></div><button class="btn-action btn-action--primary form-group--full" type="submit"><i class="fa-solid fa-plus"></i> Crear empleado</button></form></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Asignar tarea</h2></div><div class="panel__body"><form id="taskAssignmentForm" class="form-grid"><div class="form-group"><label for="taskEmployee">Empleado</label><select id="taskEmployee" class="form-select" required></select></div><div class="form-group"><label for="taskDate">Día</label><input id="taskDate" type="date" class="form-input" required></div><div class="form-group form-group--full"><label for="taskTitle">Tarea</label><input id="taskTitle" class="form-input" required></div><div class="form-group"><label for="taskPriority">Prioridad</label><select id="taskPriority" class="form-select"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Asignar</button></form></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Control de tareas asignadas</h2><div class="task-admin-actions"><select id="taskPriorityFilter" class="form-select" aria-label="Filtrar por prioridad"><option value="todas">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select><button id="btnClearTasks" type="button" class="btn-action btn-action--danger"><i class="fa-solid fa-broom"></i> Limpiar tareas</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Empleado</th><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody id="assignedTasksBody"></tbody></table></div></div></div>
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-chart-line"></i> Productividad por empleado</h2></div><div class="panel__body" id="productivityReport"></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-trophy"></i> Reconocimiento mensual</h2></div><div class="panel__body" id="monthlyRecognition"></div></div></div>
         </section>
 
@@ -784,12 +802,12 @@
           </div>
           <div class="panel warning-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-triangle-exclamation"></i> Mis amonestaciones</h2><span class="badge badge--warning">1 activa</span></div><div class="panel__body"><p><strong>Usted tiene una amonestación:</strong> por faltar dos días sin justificarse. Comuníquese con Recursos Humanos si necesita presentar un respaldo.</p></div></div>
           <!-- Marcación diaria: cada acción guarda su hora para calcular trabajo y extras. -->
-          <div class="panel attendance-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-stopwatch"></i> Mi asistencia de hoy</h2><span id="attendanceState" class="badge badge--inactive">Sin marcar</span></div><div class="panel__body"><div class="attendance-actions"><button id="btnCheckIn" class="btn-action btn-action--primary"><i class="fa-solid fa-right-to-bracket"></i> Marcar entrada</button><button id="btnBreakStart" class="btn-action btn-action--secondary"><i class="fa-solid fa-mug-hot"></i> Iniciar break</button><button id="btnBreakEnd" class="btn-action btn-action--secondary"><i class="fa-solid fa-play"></i> Terminar break</button><button id="btnCheckOut" class="btn-action btn-action--danger"><i class="fa-solid fa-right-from-bracket"></i> Marcar salida</button></div><div id="attendanceTimes" class="attendance-times">Aún no has realizado una marcación hoy.</div></div></div>
+          <div class="panel attendance-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-stopwatch"></i> Mi asistencia de hoy</h2><span id="attendanceState" class="badge badge--inactive">Sin marcar</span></div><div class="panel__body"><div class="attendance-actions"><button id="btnCheckIn" class="btn-action btn-action--primary"><i class="fa-solid fa-right-to-bracket"></i> Marcar entrada</button><button id="btnBreakStart" class="btn-action btn-action--secondary"><i class="fa-solid fa-utensils"></i> Iniciar almuerzo</button><button id="btnBreakEnd" class="btn-action btn-action--secondary"><i class="fa-solid fa-play"></i> Terminar almuerzo</button><button id="btnCheckOut" class="btn-action btn-action--danger"><i class="fa-solid fa-right-from-bracket"></i> Marcar salida</button></div><div id="attendanceTimes" class="attendance-times">Aún no has realizado una marcación hoy.</div></div></div>
           <!-- Tareas asignadas al usuario para la jornada actual. -->
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Tareas del día</h2><span class="panel__count">Actualiza tu avance</span></div><div class="panel__body"><div id="todayTasks" class="today-tasks"></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-pen"></i> Reporte de jornada</h2></div><div class="panel__body"><form id="dailyReportForm" class="daily-report"><label for="dailyReportText">Reporte de lo realizado hoy</label><textarea id="dailyReportText" class="form-input form-textarea" required placeholder="Cuente qué realizó durante la jornada..."></textarea><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar reporte</button><p id="dailyReportStatus" class="justification-status">Aún no ha enviado su reporte.</p></form></div></div>
           <div class="two-column-layout">
-            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Break</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00</td><td>12:00 – 13:00</td><td>17:00</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de break.</p></div></div>
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Almuerzo</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00 AM</td><td>12:00 PM – 01:00 PM</td><td>05:00 PM</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de almuerzo.</p></div></div>
             <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><input id="absenceProof" class="form-input file-input" type="file" accept="image/*"></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
           </div>
         </section>
@@ -802,6 +820,14 @@
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario laboral · Agosto 2026</h2></div><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="workCalendar"></div></div></div>
         </section>
 
+        <footer class="company-footer" aria-label="Identidad de AAA Software">
+          <a class="company-principles-link" href="filosofia.html" target="_blank" rel="noopener" aria-label="Abrir misión, visión y valores">
+          <article><i class="fa-solid fa-bullseye"></i><div><h3>Misión</h3><p>Crear software confiable que simplifique el trabajo y ayude a crecer a nuestros clientes.</p></div></article>
+          <article><i class="fa-solid fa-compass"></i><div><h3>Visión</h3><p>Ser un aliado tecnológico referente en Costa Rica y Latinoamérica.</p></div></article>
+          <article><i class="fa-solid fa-code"></i><div><h3>Valores</h3><p>Innovación responsable, colaboración, calidad y cercanía con las personas.</p></div></article>
+          </a>
+          <small class="company-copyright">© 2026 AAA Software · Derechos reservados de los autores.</small>
+        </footer>
       </div><!-- fin .content-area -->
     </main><!-- fin .main-content -->
   </div><!-- fin .dashboard-screen -->
@@ -853,6 +879,8 @@
 
 
   <!-- Lógica JavaScript del equipo -->
+  <script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

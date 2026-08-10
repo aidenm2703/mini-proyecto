@@ -8,7 +8,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ----- Datos y estado general de la aplicación -----
   const users = {
-    admin: { password: 'admin123', name: 'Administrador', role: 'Admin' },
+    admin1: { password: 'admin123', name: 'Administrador', role: 'Admin', username: 'admin1' },
     usuario1: { password: 'pass123', name: 'María Fernanda López', role: 'Usuario', username: 'usuario1' }
   };
   let failedAttempts = 0;
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Cada configuración evita repetir el mismo código para los tres módulos CRUD.
   const modules = {
     clientes: { singular: 'cliente', form: 'clienteForm', panel: 'formClientes', title: 'formClientesTitle', id: 'clienteId', body: 'tbodyClientes', count: 'countClientes', search: 'searchClientes', fields: ['Nombre', 'Cedula', 'Email', 'Telefono', 'Direccion', 'Estado'], labels: ['Nombre', 'Cédula', 'Email', 'Teléfono', 'Estado'], status: 'Estado', lowStock: false },
-    productos: { singular: 'producto', form: 'productoForm', panel: 'formProductos', title: 'formProductosTitle', id: 'productoId', body: 'tbodyProductos', count: 'countProductos', search: 'searchProductos', fields: ['Nombre', 'Codigo', 'Categoria', 'Precio', 'Stock', 'Estado', 'Descripcion'], labels: ['Nombre', 'Código', 'Categoría', 'Precio', 'Stock', 'Estado'], status: 'Estado', lowStock: true },
+    productos: { singular: 'producto', form: 'productoForm', panel: 'formProductos', title: 'formProductosTitle', id: 'productoId', body: 'tbodyProductos', count: 'countProductos', search: 'searchProductos', fields: ['Nombre', 'Codigo', 'Categoria', 'Precio', 'Stock', 'Estado', 'Descripcion'], labels: ['Nombre', 'Código', 'Categoría', 'Precio', 'Stock', 'Inventario'], status: 'Inventario', lowStock: false },
     proveedores: { singular: 'proveedor', form: 'proveedorForm', panel: 'formProveedores', title: 'formProveedoresTitle', id: 'proveedorId', body: 'tbodyProveedores', count: 'countProveedores', search: 'searchProveedores', fields: ['Nombre', 'Cedula', 'Telefono', 'Email', 'Direccion', 'Categoria', 'Estado', 'Contacto'], labels: ['Nombre', 'Cédula jurídica', 'Teléfono', 'Email', 'Categoría', 'Estado'], status: 'Estado', lowStock: false }
   };
 
@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = users[username] || Object.values(users).find((item) => item.name.toLowerCase() === username) || savedEmployees.find((item) => item.username.toLowerCase() === username || item.name.toLowerCase() === username);
 
     // Además de la contraseña, el usuario debe pertenecer al portal seleccionado.
-    if (user && user.password === password && user.role === selectedRole) {
+    if (user && user.password === password) {
       failedAttempts = 0; // Un acceso correcto reinicia el contador de seguridad.
       if (elevatorMusic) { window.clearInterval(elevatorMusic); elevatorMusic = null; }
       currentUser = user;
@@ -98,6 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('dashboardScreen').classList.toggle('user-session', user.role === 'Usuario');
       $('dashboardScreen').classList.toggle('admin-session', user.role === 'Admin');
       changeSection(user.role === 'Usuario' ? 'miPortal' : 'dashboard');
+      playSuccessSound();
       showToast(`Bienvenido/a, ${user.name}.`);
       return;
     }
@@ -148,17 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Simula una cámara: decide la lectura y, si es válida, envía el formulario normal.
-  $('btnBiometric').addEventListener('click', () => {
-    const status = $('biometricStatus');
-    status.textContent = 'Escaneando rostro…';
-    $('btnBiometric').disabled = true;
-    window.setTimeout(() => {
-      const accepted = Math.random() > 0.3;
-      status.textContent = accepted ? 'Identidad biométrica verificada. Validando acceso…' : 'Identidad no reconocida. Intente nuevamente.';
-      $('btnBiometric').disabled = false;
-      if (accepted) $('loginForm').requestSubmit();
-    }, 1800);
-  });
 
   function updateUserInterface() {
     const initial = currentUser.name.charAt(0).toUpperCase();
@@ -185,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.sidebar-nav__link').forEach((link) => {
     link.addEventListener('click', (event) => {
       event.preventDefault();
+      if (link.dataset.newTab === 'true') return window.open(link.href, '_blank', 'noopener');
       changeSection(link.dataset.section);
     });
   });
@@ -195,10 +186,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.sidebar-nav__link').forEach((item) => item.classList.toggle('active', item.dataset.section === section));
     $(`sec${section[0].toUpperCase()}${section.slice(1)}`).classList.add('active');
     document.querySelector('.survey-admin-results')?.classList.toggle('visible', section === 'encuestas');
-    $('pageTitle').textContent = names[section];
-    $('pageBreadcrumb').textContent = `Inicio / ${names[section]}`;
+    const language = localStorage.getItem('aaa_language') || 'es';
+    const titleIndex = ['dashboard', 'clientes', 'productos', 'proveedores', 'encuestas', 'trazabilidad', 'empleados', 'miPortal', 'miCalendario', 'miEncuesta'].indexOf(section);
+    const sectionTitle = languageText[language]?.[titleIndex] || names[section];
+    $('pageTitle').textContent = sectionTitle;
+    $('pageBreadcrumb').textContent = `${language === 'en' ? 'Home' : language === 'fr' ? 'Accueil' : language === 'it' ? 'Home' : language === 'pt' ? 'Início' : 'Inicio'} / ${sectionTitle}`;
+    if (window.location.hash !== `#${section}`) window.history.replaceState(null, '', `#${section}`);
+    $('mainContent').scrollTo({ top: 0, behavior: 'smooth' });
     closeMobileMenu();
   }
+
+  window.addEventListener('hashchange', () => {
+    const section = window.location.hash.slice(1);
+    const target = $(`sec${section[0]?.toUpperCase() || ''}${section.slice(1)}`);
+    if (target && !(currentUser?.role === 'Admin' && target.classList.contains('user-only')) && !(currentUser?.role === 'Usuario' && target.classList.contains('admin-only'))) changeSection(section);
+  });
 
   $('sidebarToggle').addEventListener('click', () => $('sidebar').classList.toggle('collapsed'));
   $('mobileMenuBtn').addEventListener('click', () => { $('sidebar').classList.add('mobile-open'); $('sidebarOverlay').classList.add('visible'); });
@@ -222,8 +224,58 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast('La sesión se cerró correctamente.');
   }
 
-  // El botón de notificaciones también es funcional: muestra un mensaje contextual.
-  $('btnNotifications').addEventListener('click', () => showToast('Tienes 3 notificaciones: revisa los registros y el inventario.'));
+  const notifications = [
+    { icon: 'fa-list-check', title: 'Tareas pendientes', text: 'Revisa las tareas asignadas al personal.', detail: 'Hay tareas pendientes de actualización. Abra Empleados y tareas para revisar responsables, fechas y prioridad.', time: 'Ahora' },
+    { icon: 'fa-boxes-stacked', title: 'Inventario', text: 'Hay productos con stock bajo.', detail: 'El inventario requiere revisión. En Productos puede consultar el stock y actualizar los artículos necesarios.', time: 'Hoy' },
+    { icon: 'fa-shield-halved', title: 'Seguridad', text: 'El acceso está protegido y monitoreado.', detail: 'No hay acciones obligatorias. El sistema mantiene un registro de intentos de acceso para el administrador.', time: 'Hoy' }
+  ];
+  let visibleNotifications = [];
+  function renderNotifications() {
+    const alerts = JSON.parse(localStorage.getItem(securityStorage || 'aaa_security_alerts') || '[]');
+    const items = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
+    const taskUpdates = JSON.parse(localStorage.getItem('aaa_task_notifications') || '[]').slice(0, 5).map((item) => ({ icon: item.done ? 'fa-circle-check' : 'fa-rotate-left', title: item.done ? 'Tarea completada' : 'Tarea reabierta', text: `${item.employee}: ${item.title}`, detail: `${item.employee} marcó la tarea “${item.title}” como ${item.done ? 'completada' : 'pendiente'}.`, time: item.time }));
+    visibleNotifications = [...taskUpdates, ...items.map((item) => ({ ...item, detail: 'Se detectó un intento de acceso. Puede revisar la información de seguridad y confirmar que la persona use sus credenciales correctas.' })), ...notifications];
+    $('notificationList').innerHTML = visibleNotifications.map((notice, index) => `<button type="button" class="notification-item" data-notification="${index}"><i class="fa-solid ${notice.icon}"></i><span><b>${notice.title}</b><small>${notice.text}</small></span><time>${notice.time}</time></button>`).join('');
+    $('notificationDetail').textContent = 'Seleccione una notificación para ver el detalle.';
+    $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = visibleNotifications.length;
+  }
+  $('btnNotifications').addEventListener('click', (event) => {
+    event.stopPropagation();
+    const panel = $('notificationPanel');
+    panel.hidden = !panel.hidden;
+    $('btnNotifications').setAttribute('aria-expanded', String(!panel.hidden));
+  });
+  $('notificationList').addEventListener('click', (event) => { const item = event.target.closest('[data-notification]'); if (!item) return; const notice = visibleNotifications[Number(item.dataset.notification)]; $('notificationDetail').innerHTML = `<b>${escapeHtml(notice.title)}</b><span>${escapeHtml(notice.detail)}</span>`; });
+  $('btnClearNotifications').addEventListener('click', () => { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); $('btnNotifications').querySelector('.header-icon-btn__badge').textContent = '0'; showToast('Notificaciones marcadas como leídas.'); });
+  document.addEventListener('click', (event) => { if (!event.target.closest('.notification-wrap')) { $('notificationPanel').hidden = true; $('btnNotifications').setAttribute('aria-expanded', 'false'); } });
+
+  const languageNames = { es: 'Español', en: 'English' };
+  const languageText = {
+    es: ['Dashboard', 'Clientes', 'Productos', 'Proveedores', 'Encuestas', 'Trazabilidad', 'Empleados y tareas', 'Mi asistencia', 'Calendario laboral', 'Mi encuesta'],
+    en: ['Dashboard', 'Clients', 'Products', 'Suppliers', 'Surveys', 'Traceability', 'Employees & tasks', 'My attendance', 'Work calendar', 'My survey'],
+  };
+  function setLanguage(language) {
+    language = language === 'en' ? 'en' : 'es';
+    $('languageSelect').value = language;
+    window.AAAI18n.setLanguage(language).then(() => {
+      const section = window.location.hash.slice(1) || 'dashboard';
+      const titleIndex = ['dashboard', 'clientes', 'productos', 'proveedores', 'encuestas', 'trazabilidad', 'empleados', 'miPortal', 'miCalendario', 'miEncuesta'].indexOf(section);
+      const title = languageText[language]?.[titleIndex];
+      if (title) {
+        $('pageTitle').textContent = title;
+        $('pageBreadcrumb').textContent = `${language === 'en' ? 'Home' : 'Inicio'} / ${title}`;
+      }
+      showToast(`Idioma cambiado a ${languageNames[language]}.`);
+    });
+  }
+  $('languageSelect').addEventListener('change', (event) => setLanguage(event.target.value));
+  const savedLanguage = localStorage.getItem('aaa_language');
+  $('languageSelect').value = savedLanguage === 'en' ? 'en' : 'es';
+  if ($('languageSelect').value === 'en') setLanguage('en');
+
+  function setTheme(theme) { document.body.classList.toggle('light-theme', theme === 'light'); $('btnTheme').innerHTML = `<i class="fa-solid fa-${theme === 'light' ? 'sun' : 'moon'}"></i>`; localStorage.setItem('aaa_theme', theme); }
+  $('btnTheme').addEventListener('click', () => setTheme(document.body.classList.contains('light-theme') ? 'dark' : 'light'));
+  setTheme(localStorage.getItem('aaa_theme') || 'dark');
 
   // Una justificación con foto se aprueba; sin comprobante se niega a los 15 segundos.
   $('justifyAbsenceForm').addEventListener('submit', (event) => {
@@ -259,12 +311,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function markAttendance(action) {
     const record = getAttendance();
     if (record[action]) return showToast('Esta acción ya fue registrada hoy.', true);
-    record[action] = new Date().toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' });
+    record[action] = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
     record[`${action}Stamp`] = Date.now();
     saveAttendance(record);
     showToast(`Hora de ${attendanceLabels[action]} registrada: ${record[action]}.`);
   }
-  const attendanceLabels = { checkIn: 'entrada', breakStart: 'inicio de break', breakEnd: 'fin de break', checkOut: 'salida' };
+  const attendanceLabels = { checkIn: 'entrada', breakStart: 'inicio de almuerzo', breakEnd: 'fin de almuerzo', checkOut: 'salida' };
   $('btnCheckIn').addEventListener('click', () => markAttendance('checkIn'));
   $('btnBreakStart').addEventListener('click', () => markAttendance('breakStart'));
   $('btnBreakEnd').addEventListener('click', () => markAttendance('breakEnd'));
@@ -286,9 +338,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderTasks() {
     const completed = getTasks();
     const priorityOrder = { alta: 0, media: 1, baja: 2 };
-    const assigned = assignments().filter((task) => task.employee === currentEmployeeName() && task.date === todayKey()).sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    const visible = assigned.length ? assigned.map((task, index) => ({ ...task, index })) : taskList.map((title, index) => ({ title, priority: index === 0 ? 'alta' : index === 1 ? 'media' : 'baja', index }));
-    $('todayTasks').innerHTML = visible.map((task) => `<label class="task-item priority-${task.priority}"><input type="checkbox" data-task="${task.index}" data-assignment="${escapeHtml(task.title)}" ${completed.includes(task.index) ? 'checked' : ''}><span>${escapeHtml(task.title)} <small>Prioridad ${task.priority}</small></span><b>${completed.includes(task.index) ? 'Completada' : 'Pendiente'}</b></label>`).join('');
+    const assigned = assignments().filter((task) => task.employee === currentEmployeeName() && task.date <= todayKey()).sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+    const customTasks = assigned.map((task, index) => ({ ...task, index, taskId: `custom-${index}` }));
+    const defaults = taskList.map((title, index) => ({ title, priority: index === 0 ? 'alta' : index === 1 ? 'media' : 'baja', index: customTasks.length + index, taskId: `default-${index}` }));
+    const visible = [...customTasks, ...defaults];
+    $('todayTasks').innerHTML = visible.map((task) => `<label class="task-item priority-${task.priority}"><input type="checkbox" data-task="${task.index}" data-assignment="${escapeHtml(task.title)}" ${completed.includes(task.index) || task.done ? 'checked' : ''}><span>${escapeHtml(task.title)} <small>${task.taskId.startsWith('custom') ? `Asignada · ${task.date} · ` : ''}Prioridad ${task.priority}</small></span><b>${completed.includes(task.index) || task.done ? 'Completada' : 'Pendiente'}</b></label>`).join('');
   }
   $('todayTasks').addEventListener('change', (event) => {
     const index = Number(event.target.dataset.task);
@@ -297,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     completed = event.target.checked ? [...new Set([...completed, index])] : completed.filter((item) => item !== index);
     localStorage.setItem(taskStorageKey(), JSON.stringify(completed));
     const taskTitle = event.target.dataset.assignment;
-    if (taskTitle) { const list = assignments(); const assigned = list.find((task) => task.employee === currentEmployeeName() && task.date === todayKey() && task.title === taskTitle); if (assigned) { assigned.done = event.target.checked; localStorage.setItem(assignmentStorage, JSON.stringify(list)); renderEmployeeAdmin(); } }
+    if (taskTitle) { const list = assignments(); const assigned = list.find((task) => task.employee === currentEmployeeName() && task.date <= todayKey() && task.title === taskTitle); if (assigned) { assigned.done = event.target.checked; localStorage.setItem(assignmentStorage, JSON.stringify(list)); const taskAlerts=JSON.parse(localStorage.getItem('aaa_task_notifications')||'[]'); taskAlerts.unshift({employee:currentEmployeeName(),title:taskTitle,done:event.target.checked,time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})}); localStorage.setItem('aaa_task_notifications',JSON.stringify(taskAlerts.slice(0,20))); renderEmployeeAdmin(); } }
     renderTasks(); renderTraceability();
   });
 
@@ -313,7 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* Encuesta del proveedor: seis calificaciones de 1 a 5. */
   const surveyTexts = ['Puntualidad de entrega', 'Calidad de productos', 'Comunicación', 'Precio competitivo', 'Atención al cliente', 'Cumplimiento de acuerdos'];
-  $('surveyQuestions').innerHTML = surveyTexts.map((question, index) => `<fieldset class="survey-question"><legend>${index + 1}. ${question}</legend>${[1, 2, 3, 4, 5].map((score) => `<label><input required type="radio" name="question${index}" value="${score}"> ${score}</label>`).join('')}</fieldset>`).join('');
+  const ratingOptions = (name) => [1, 2, 3, 4, 5].map((score) => `<label class="rating-option"><input required type="radio" name="${name}" value="${score}"><span><i class="fa-solid fa-star"></i>${score}</span></label>`).join('');
+  $('surveyQuestions').innerHTML = surveyTexts.map((question, index) => `<fieldset class="survey-question"><legend>${index + 1}. ${question}</legend><div class="rating-options">${ratingOptions(`question${index}`)}</div></fieldset>`).join('');
   $('supplierSurvey').addEventListener('submit', (event) => { event.preventDefault(); if (!event.currentTarget.checkValidity()) return event.currentTarget.reportValidity(); const scores = surveyTexts.map((_, index) => Number(new FormData(event.currentTarget).get(`question${index}`))); const average = (scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(1); showToast(`Encuesta guardada: ${$('surveySupplier').value} obtuvo ${average}/5.`); event.currentTarget.reset(); });
 
   /* ----------------------------------------------------------------
@@ -325,16 +380,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const assignments = () => JSON.parse(localStorage.getItem(assignmentStorage) || '[]');
   const currentEmployeeName = () => currentUser?.name || 'María Fernanda López';
   const employeeQuestions = ['Claridad de las tareas', 'Ambiente laboral', 'Comunicación con administración', 'Herramientas de trabajo'];
-  $('btnBiometric').addEventListener('click', async (event) => { event.stopImmediatePropagation(); const status=$('biometricStatus'), video=$('biometricVideo'); status.textContent='Abriendo cámara…'; $('btnBiometric').disabled=true; try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; window.setTimeout(()=>{status.textContent='Reconocido. Ingrese su contraseña para continuar.'; $('btnBiometric').disabled=false; $('loginPass').focus();},1200); } catch { status.textContent='Cámara no disponible. Ingrese su contraseña normalmente.'; $('btnBiometric').disabled=false; } }, true);
+  $('btnBiometric').addEventListener('click', async () => { const status=$('biometricStatus'), video=$('biometricVideo'), button=$('btnBiometric'); status.textContent='Escaneando rasgos faciales…'; button.disabled=true; video.classList.add('biometric-video--scanning'); try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; } catch { video.hidden=true; } window.setTimeout(()=>{video.classList.remove('biometric-video--scanning'); video.srcObject?.getTracks().forEach((track)=>track.stop()); video.srcObject=null; video.hidden=true; status.textContent='Persona no reconocida. Cámara apagada. Ingrese con su contraseña.';button.disabled=false;$('loginPass').focus();},2200); });
   function registerSecurityAlert(attemptedUser) { const alerts=JSON.parse(localStorage.getItem(securityStorage)||'[]'); alerts.unshift({attemptedUser,date:new Date().toLocaleDateString('es-GT'),time:new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}); localStorage.setItem(securityStorage,JSON.stringify(alerts)); }
-  $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend>${[1,2,3,4,5].map(n=>`<label><input required type="radio" name="employeeQuestion${i}" value="${n}"> ${n}</label>`).join('')}</fieldset>`).join('');
+  $('employeeSurveyQuestions').innerHTML=employeeQuestions.map((q,i)=>`<fieldset class="survey-question"><legend>${i+1}. ${q}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
   $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();showToast('Encuesta enviada.');});
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${q}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
-  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;}
+  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
+  function renderAssignedTasks(){const filter=$('taskPriorityFilter').value, tasks=assignments().filter(task=>filter==='todas'||task.priority===filter);$('assignedTasksBody').innerHTML=tasks.length?tasks.sort((a,b)=>({alta:0,media:1,baja:2}[a.priority]-({alta:0,media:1,baja:2}[b.priority]))).map(task=>`<tr><td>${escapeHtml(task.employee)}</td><td>${escapeHtml(task.title)}</td><td>${task.date}</td><td><span class="task-priority task-priority--${task.priority}">${capitalize(task.priority)}</span></td><td>${task.done?'Completada':'Pendiente'}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="5">No hay tareas para este filtro.</td></tr>';}
+  $('taskPriorityFilter').addEventListener('change',renderAssignedTasks);
+  $('btnClearTasks').addEventListener('click',()=>{if(!assignments().length)return showToast('No hay tareas para limpiar.');localStorage.removeItem(assignmentStorage);localStorage.removeItem('aaa_task_notifications');renderEmployeeAdmin();renderTasks();showToast('Todas las tareas asignadas fueron eliminadas.');});
   $('dailyReportForm').addEventListener('submit',e=>{e.preventDefault();const r=JSON.parse(localStorage.getItem(reportStorage)||'[]');r.unshift({name:currentEmployeeName(),text:$('dailyReportText').value.trim(),date:todayKey()});localStorage.setItem(reportStorage,JSON.stringify(r));$('dailyReportStatus').textContent='Reporte enviado correctamente.';e.currentTarget.reset();renderEmployeeAdmin();showToast('Reporte de jornada enviado.');});
-  $('btnNotifications').addEventListener('click',()=>{const a=JSON.parse(localStorage.getItem(securityStorage)||'[]');if(currentUser?.role==='Admin'&&a.length)showToast(`ALERTA: ${a[0].attemptedUser} intentó ingresar el ${a[0].date} a las ${a[0].time}.`,true);});
   renderSurveyResults(); renderEmployeeAdmin();
 
   Object.entries(modules).forEach(([key, config]) => setupModule(key, config));
@@ -426,14 +483,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function formatCell(record, label, config) {
     const field = label.toLowerCase().replace(' jurídica', '');
     if (label === config.status) return statusBadge(record.estado, config.lowStock ? Number(record.stock) : null);
-    if (label === 'Precio') return new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' }).format(Number(record.precio));
+    if (label === 'Precio') return new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 2 }).format(Number(record.precio));
     return escapeHtml(record[field] ?? '');
   }
 
   function statusBadge(status, stock) {
-    const low = Number.isFinite(stock) && stock <= 5;
-    const style = low ? 'warning' : ['activo', 'disponible'].includes(status) ? (status === 'activo' ? 'active' : 'available') : status === 'agotado' ? 'out' : 'inactive';
-    const text = low ? `Bajo (${stock})` : capitalize(status || 'Sin estado');
+    const style = status === 'bajo' ? 'warning' : ['activo', 'disponible'].includes(status) ? (status === 'activo' ? 'active' : 'available') : status === 'descontinuado' ? 'out' : 'inactive';
+    const text = capitalize(status || 'Sin estado');
     return `<span class="badge badge--${style}">${escapeHtml(text)}</span>`;
   }
 
@@ -441,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('statTotalClientes').textContent = data.clientes.length;
     $('statTotalProductos').textContent = data.productos.length;
     $('statTotalProveedores').textContent = data.proveedores.filter((item) => item.estado === 'activo').length;
-    $('statBajoStock').textContent = data.productos.filter((item) => Number(item.stock) <= 5).length;
+    $('statBajoStock').textContent = data.productos.filter((item) => item.estado === 'bajo').length;
     const recent = Object.entries(data).flatMap(([type, records]) => records.map((record) => ({ type, ...record }))).slice(0, 6);
     $('tbodyUltimos').innerHTML = recent.length ? recent.map((record) => `<tr><td>${capitalize(record.type.slice(0, -1))}</td><td>${escapeHtml(record.nombre)}</td><td>${record.createdAt ?? 'Actualizado'}</td><td>${statusBadge(record.estado, record.type === 'productos' ? Number(record.stock) : null)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="4">No hay registros aún</td></tr>';
   }
