@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (elevatorMusic) { window.clearInterval(elevatorMusic); elevatorMusic = null; }
       currentUser = user;
       localStorage.setItem('aaa_current_user', JSON.stringify({ name: user.name, username: user.username, role: user.role }));
+      stopFaceScan();
       updateUserInterface();
       $('loginScreen').style.display = 'none';
       $('dashboardScreen').style.display = 'flex';
@@ -218,6 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('aaa_current_user');
     $('dashboardScreen').style.display = 'none';
     $('loginScreen').style.display = 'flex';
+    startFaceScan();
     $('loginForm').reset();
     selectedRole = null;
     $('loginForm').style.display = 'none';
@@ -266,9 +268,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Solo se muestra el número de notificaciones sin leer; 0 oculta el distintivo.
     const readCount = Number(localStorage.getItem('aaa_notifications_read') || 0);
     const unread = Math.max(0, visibleNotifications.length - readCount);
-    const badge = $('btnNotifications').querySelector('.header-icon-btn__badge');
-    badge.textContent = unread > 0 ? String(unread) : '';
-    badge.title = unread > 0 ? `${unread} ${unread === 1 ? 'sin leer' : 'sin leer'}` : '';
+    const badge = $('btnNotifications')?.querySelector('.header-icon-btn__badge');
+    if (badge) badge.textContent = unread > 0 ? String(unread) : '';
+    if (badge) badge.title = unread > 0 ? `${unread} ${unread === 1 ? 'sin leer' : 'sin leer'}` : '';
   }
   $('btnNotifications').addEventListener('click', (event) => {
     event.stopPropagation();
@@ -428,10 +430,49 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!$('employeeSurveyQuestions')) return;
     $('employeeSurveyQuestions').innerHTML = employeeQuestions.map((q, i) => `<fieldset class="survey-question"><legend>${i + 1}. ${i18nText(q)}</legend><div class="rating-options">${ratingOptions(`employeeQuestion${i}`)}</div></fieldset>`).join('');
   }
-  $('btnBiometric').addEventListener('click', async () => { const status=$('biometricStatus'), video=$('biometricVideo'), button=$('btnBiometric'); status.textContent='Escaneando rasgos faciales…'; button.disabled=true; video.classList.add('biometric-video--scanning'); try { const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false}); video.srcObject=stream; video.hidden=false; } catch { video.hidden=true; } window.setTimeout(()=>{video.classList.remove('biometric-video--scanning'); video.srcObject?.getTracks().forEach((track)=>track.stop()); video.srcObject=null; video.hidden=true; status.textContent='Persona no reconocida. Cámara apagada. Ingrese con su contraseña.';button.disabled=false;$('loginPass').focus();},2200); });
+  let faceScanTimer = null;
+  let faceScanStream = null;
+  function stopFaceScan() {
+    window.clearTimeout(faceScanTimer);
+    faceScanTimer = null;
+    if (faceScanStream) { faceScanStream.getTracks().forEach((track) => track.stop()); faceScanStream = null; }
+    const overlay = $('faceScanOverlay'); if (overlay) overlay.hidden = true;
+  }
+  function startFaceScan() {
+    const status = $('biometricAutoStatus');
+    const video = $('biometricAutoVideo');
+    const overlay = $('faceScanOverlay');
+    if (!status || !video || !overlay) return;
+    stopFaceScan();
+    status.classList.remove('is-error');
+    status.innerHTML = '<i class="fa-solid fa-camera"></i><span>Iniciando reconocimiento facial…</span>';
+    overlay.hidden = false;
+    const label = $('faceScanLabel'); if (label) label.textContent = 'Analizando facciones…';
+    video.classList.add('biometric-video--scanning');
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+        .then((stream) => { if ($('loginScreen').style.display !== 'none') { faceScanStream = stream; video.srcObject = stream; } else stream.getTracks().forEach((track) => track.stop()); })
+        .catch(() => {});
+    }
+    const progress = window.setInterval(() => {
+      const eyes = $('dataEyes'); if (eyes) eyes.textContent = (1.2 + Math.random() * 2.4).toFixed(1);
+      const symmetry = $('dataSymmetry'); if (symmetry) symmetry.textContent = `${Math.min(99, Math.round(40 + Math.random() * 58))}%`;
+      const confidence = $('dataConfidence'); if (confidence) confidence.textContent = `${Math.min(99, Math.round(30 + Math.random() * 69))}%`;
+    }, 220);
+    faceScanTimer = window.setTimeout(() => {
+      window.clearInterval(progress);
+      video.classList.remove('biometric-video--scanning');
+      if (faceScanStream) { faceScanStream.getTracks().forEach((track) => track.stop()); faceScanStream = null; }
+      video.srcObject = null;
+      overlay.hidden = true;
+      status.classList.add('is-error');
+      status.innerHTML = '<i class="fa-solid fa-shield-halved"></i><span>Persona no reconocida. Cámara apagada. Ingrese con su contraseña.</span>';
+      const pass = $('loginPass'); if (pass) pass.focus();
+    }, 2200);
+  }
   function registerSecurityAlert(attemptedUser) { const alerts=JSON.parse(localStorage.getItem(securityStorage)||'[]'); alerts.unshift({attemptedUser,date:new Date().toLocaleDateString('es-GT'),time:new Date().toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}); localStorage.setItem(securityStorage,JSON.stringify(alerts)); }
   renderEmployeeSurvey();
-  $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:$('surveyComment').value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();renderEmployeeSurvey();showToast('Encuesta enviada.');});
+  if ($('employeeSurvey')) $('employeeSurvey').addEventListener('submit',e=>{e.preventDefault();if(!e.currentTarget.checkValidity())return e.currentTarget.reportValidity();const scores=employeeQuestions.map((_,i)=>Number(new FormData(e.currentTarget).get(`employeeQuestion${i}`))),r=JSON.parse(localStorage.getItem(surveyStorage)||'[]');r.unshift({name:currentEmployeeName(),scores,comment:($('surveyComment')||{}).value.trim(),date:new Date().toLocaleDateString('es-GT')});localStorage.setItem(surveyStorage,JSON.stringify(r));e.currentTarget.reset();renderSurveyResults();renderEmployeeSurvey();showToast('Encuesta enviada.');});
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${i18nText(q)}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
@@ -568,9 +609,54 @@ document.addEventListener('DOMContentLoaded', () => {
     showToast.timer = window.setTimeout(() => toast.classList.remove('show'), 4200);
   }
 
+  function updateAuthUI() {
+    const saved = JSON.parse(localStorage.getItem('aaa_current_user') || 'null');
+    if (saved && currentUser) {
+      currentUser = { ...currentUser, ...saved };
+      updateUserInterface();
+    }
+  }
+
+  function openPerfilModal() {
+    const saved = JSON.parse(localStorage.getItem('aaa_current_user') || 'null') || {};
+    $('perfilNombre').value = saved.name || currentUser?.name || '';
+    $('perfilCorreo').value = saved.email || saved.correo || '';
+    $('perfilTelefono').value = saved.telefono || saved.phone || '';
+    $('modalPerfil').style.display = 'flex';
+  }
+
+  function closePerfilModal() {
+    $('modalPerfil').style.display = 'none';
+  }
+
+  $('btnMiPerfil').addEventListener('click', () => {
+    openPerfilModal();
+  });
+
+  $('btnCerrarPerfil').addEventListener('click', () => {
+    closePerfilModal();
+  });
+
+  $('perfilForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const current = JSON.parse(localStorage.getItem('aaa_current_user') || 'null');
+    if (!current) return;
+    const updated = {
+      ...current,
+      name: $('perfilNombre').value.trim() || current.name,
+      email: $('perfilCorreo').value.trim(),
+      telefono: $('perfilTelefono').value.trim(),
+    };
+    localStorage.setItem('aaa_current_user', JSON.stringify(updated));
+    updateAuthUI();
+    closePerfilModal();
+    showToast('Perfil actualizado correctamente.');
+  });
+
   // Crea agosto de 2026. Sábados y domingos son libres; el 15 se marca como pago doble.
   function renderWorkCalendar() {
     const calendar = $('workCalendar');
+    if (!calendar) return;
     const firstDay = new Date(2026, 7, 1).getDay();
     const totalDays = 31;
     const names = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -608,5 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTraceability();
   renderNotifications();
   restoreSession();
+  if ($('loginScreen').style.display !== 'none') startFaceScan();
   startInteractiveBackground();
 });

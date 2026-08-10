@@ -21,7 +21,7 @@
     { href: 'directorio.html', page: 'directorio', label: 'Directorio de empleados', icon: 'fa-address-book' },
     { href: 'eventos.html', page: 'eventos', label: 'Calendario de eventos', icon: 'fa-calendar-days' },
     { href: 'nomina.html', page: 'nomina', label: 'Recibos de nómina', icon: 'fa-file-invoice-dollar' },
-    { href: 'documentos.html', page: 'documentos', label: 'Políticas internas', icon: 'fa-folder-open' }
+    { page: 'documentos', label: 'Política Interna', icon: 'fa-folder-open', action: 'abrirPoliticaPDF' }
   ];
   const currentPage = document.body.dataset.page || '';
 
@@ -55,8 +55,12 @@
     if (nav) {
       nav.innerHTML = `
         <div class="portal-nav__brand"><span class="brand-mark"><img src="logo.jpeg" alt="AAA Software"></span><div><b>${esc(t('Mi Portal'))}</b><small>AAA Software</small></div></div>
-        <nav class="portal-nav__list">${PAGES.map((page) => `<a class="portal-nav__link ${page.page === currentPage ? 'active' : ''}" href="${page.href}" title="${esc(t(page.label))}"><i class="fa-solid ${page.icon}"></i><span>${esc(t(page.label))}</span></a>`).join('')}</nav>
+        <nav class="portal-nav__list">${PAGES.map((page) => page.action
+          ? `<button type="button" class="portal-nav__link ${page.page === currentPage ? 'active' : ''}" data-nav-action="${page.action}" title="${esc(t(page.label))}"><i class="fa-solid ${page.icon}"></i><span>${esc(t(page.label))}</span></button>`
+          : `<a class="portal-nav__link ${page.page === currentPage ? 'active' : ''}" href="${page.href}" title="${esc(t(page.label))}"><i class="fa-solid ${page.icon}"></i><span>${esc(t(page.label))}</span></a>`).join('')}</nav>
         <div class="portal-nav__user"><span class="portal-nav__avatar">${esc(employeeName().charAt(0).toUpperCase())}</span><span class="portal-nav__user-name">${esc(employeeName())}</span><a class="portal-nav__logout" href="index.html" title="${esc(t('Cerrar sesión'))}"><i class="fa-solid fa-right-from-bracket"></i></a></div>`;
+      const navAction = nav.querySelector('[data-nav-action="abrirPoliticaPDF"]');
+      if (navAction) navAction.addEventListener('click', (event) => { event.preventDefault(); window.abrirPoliticaPDF(); });
     }
 
     const topbar = document.getElementById('portalTopbar');
@@ -89,7 +93,8 @@
       const languageSelect = document.getElementById('languageSelect');
       languageSelect.value = localStorage.getItem('aaa_language') === 'en' ? 'en' : 'es';
       languageSelect.addEventListener('change', (event) => {
-        window.AAAI18n.setLanguage(event.target.value).then(() => { buildChrome(); window.renderPage?.(); });
+        const setLanguage = window.AAAI18n?.setLanguage ? window.AAAI18n.setLanguage(event.target.value) : Promise.resolve();
+        setLanguage.then(() => { buildChrome(); window.renderPage?.(); });
       });
 
       const bell = document.getElementById('btnNotifications');
@@ -135,9 +140,185 @@
   }
 
   window.AAA = { t, employeeName, esc, showToast };
-  window.AAAI18n.ready.then(() => {
+  // El botón "Volver" de cada módulo oculta el módulo actual y regresa al
+  // menú "Mi portal". La navegación por defecto (index.html#miPortal) muestra
+  // la sección del menú sin llamar al login ni al logout.
+  document.querySelectorAll('.btn-back-home').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const module = document.querySelector('.portal-shell');
+      if (module) module.style.display = 'none';
+    });
+  });
+  // ================================================================
+  //  Generador de PDF autocontenido (sin librerías externas).
+  //  Permite abrir/descargar documentos PDF reales incluso sin Internet.
+  //  rows = [{ text | parts:[{text,x,bold,size}], x, bold, size, gap, sep, band }]
+  // ================================================================
+  const latin1 = (text) => String(text ?? '')
+    .replace(/₡/g, 'CRC ')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .replace(/…/g, '...')
+    .replace(/[−–—]/g, '-')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
+  const wrapLines = (text, size, maxChars) => {
+    const words = String(text).split(/\s+/);
+    const lines = [];
+    let line = '';
+    for (const word of words) {
+      const candidate = line ? line + ' ' + word : word;
+      if (candidate.length > maxChars && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    if (line) lines.push(line);
+    return lines;
+  };
+  const buildPdf = (rows) => {
+    const parts = ['BT'];
+    const W = 612;
+    let y = 760;
+    for (const row of rows) {
+      if (row.band) {
+        const h = row.bandHeight || 34;
+        parts.push('ET');
+        parts.push('0.043 0.082 0.18 rg 0 ' + (y - h).toFixed(1) + ' ' + W + ' ' + h + ' re f');
+        parts.push('BT');
+        parts.push('1 1 1 rg');
+      } else if (row.sep) {
+        parts.push('ET');
+        parts.push('0.55 0.55 0.6 RG 50 ' + y.toFixed(1) + ' m ' + (W - 50) + ' ' + y.toFixed(1) + ' l S');
+        parts.push('BT');
+        parts.push('0 0 0 rg');
+      } else {
+        parts.push('0 0 0 rg');
+      }
+      const textY = row.band ? y - (row.bandHeight || 34) * 0.5 : y;
+      const items = Array.isArray(row.parts) ? row.parts : [{ text: row.text, x: row.x, bold: row.bold, size: row.size }];
+      let lineOffset = 0;
+      for (const p of items) {
+        const font = p.bold ? '/F2' : '/F1';
+        const size = p.size || row.size || 11;
+        const raw = String(p.text ?? '');
+        const wrap = p.wrap || row.wrap;
+        const maxChars = p.maxChars || row.maxChars || 95;
+        const texts = wrap && raw.length > maxChars ? wrapLines(raw, size, maxChars) : [raw];
+        for (const text of texts) {
+          const ty = textY - lineOffset;
+          const width = p.right != null ? text.length * size * 0.5 : 0;
+          const x = p.x != null ? p.x : (p.right != null ? p.right - width : 50);
+          parts.push(font + ' ' + size + ' Tf');
+          parts.push('1 0 0 1 ' + x.toFixed(1) + ' ' + ty.toFixed(1) + ' Tm');
+          parts.push('(' + latin1(text) + ') Tj');
+          lineOffset += size + 3;
+        }
+      }
+      y -= (row.gap || 16);
+    }
+    parts.push('ET');
+    const stream = parts.join('\n');
+    const objects = [
+      '<< /Type /Catalog /Pages 2 0 R >>',
+      '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+      '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>',
+      '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>',
+      '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream'
+    ];
+    let pdf = '%PDF-1.4\n';
+    const offsets = [];
+    for (let i = 0; i < objects.length; i++) {
+      offsets[i] = pdf.length;
+      pdf += (i + 1) + ' 0 obj\n' + objects[i] + '\nendobj\n';
+    }
+    const xref = pdf.length;
+    pdf += 'xref\n0 ' + (objects.length + 1) + '\n0000000000 65535 f \n';
+    for (const o of offsets) pdf += String(o).padStart(10, '0') + ' 00000 n \n';
+    pdf += 'trailer\n<< /Size ' + (objects.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF';
+    const bytes = new Uint8Array(pdf.length);
+    for (let i = 0; i < pdf.length; i++) bytes[i] = pdf.charCodeAt(i) & 0xFF;
+    return bytes;
+  };
+  const pdfBlob = (rows) => new Blob([buildPdf(rows)], { type: 'application/pdf' });
+  const openPdf = (rows) => {
+    const url = URL.createObjectURL(pdfBlob(rows));
+    const win = window.open(url, '_blank');
+    if (!win) window.location.href = url;
+  };
+  const downloadPdf = (rows, filename) => {
+    const url = URL.createObjectURL(pdfBlob(rows));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  window.AAA.pdf = { open: openPdf, download: downloadPdf };
+
+  // ================================================================
+  //  Renderizado del módulo.
+  //  IMPORTANTE: el script del módulo (que define window.renderPage)
+  //  se ejecuta DESPUÉS de portal.js. La promesa de i18next resuelve
+  //  como microtarea entre scripts, cuando renderPage aún no existe;
+  //  por eso se vuelve a intentar en DOMContentLoaded (cuando ya está
+  //  definida) en lugar de marcar "renderizado" con una llamada vacía.
+  // ================================================================
+  let rendered = false;
+  let chromeBuilt = false;
+  const render = () => {
+    if (rendered || typeof window.renderPage !== 'function') return;
+    rendered = true;
+    window.renderPage();
+  };
+  const boot = () => {
+    if (chromeBuilt) {
+      render();
+      return;
+    }
+    chromeBuilt = true;
     ensureToast();
     buildChrome();
-    window.renderPage?.();
-  });
+    render();
+  };
+  document.addEventListener('DOMContentLoaded', boot);
+  if (document.readyState !== 'loading') boot();
+  if (window.AAAI18n?.ready) window.AAAI18n.ready.then(boot);
+  // Abre la Política Interna en una ventana nueva lista para imprimir.
+  function abrirPoliticaPDF() {
+    const politicaHTML = `
+      <html><head><title>Política Interna - AAA SOFTWARE</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 60px; color: #222; line-height: 1.8; max-width: 800px; margin: 0 auto; }
+        h1 { color: #000; text-align: center; border-bottom: 3px solid #0056b3; padding-bottom: 15px; }
+        h2 { color: #0056b3; margin-top: 30px; }
+        p { text-align: justify; margin-bottom: 15px; }
+        .header-img { text-align: center; margin-bottom: 30px; font-size: 24px; font-weight: bold; color: #0056b3; }
+        .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #888; border-top: 1px solid #ccc; padding-top: 15px; }
+      </style></head><body>
+      <div class="header-img">AAA SOFTWARE</div>
+      <h1>Política Interna de la Empresa</h1>
+      <p><strong>Fecha de emisión:</strong> 01 de Enero 2025<br><strong>Versión:</strong> 1.0</p>
+      <h2>1. Política de uso de equipos tecnológicos</h2>
+      <p>Todo equipo tecnológico proporcionado por AAA SOFTWARE es para uso exclusivo laboral. Qeda estrictamente prohibida la instalación de software no autorizado por el departamento de TI. El empleado es responsable del cuidado físico del equipo asignado. En caso de daño, robo o pérdida, deberá reportarlo de inmediato mediante el sistema de soporte interno.</p>
+      <h2>2. Reglamento interno de trabajo</h2>
+      <p>El horario administrativo es de 8:00 AM a 5:00 PM, de lunes a viernes. Se requiere un código de vestimenta Business Casual. Se debe mantener un ambiente de respeto, profesionalismo y cero tolerancia al acoso en todas las áreas físicas y digitales de la empresa.</p>
+      <h2>3. Política de vacaciones y permisos</h2>
+      <p>Cada empleado tiene derecho a 12 días hábiles de vacaciones anuales. El máximo permitido por solicitud continua es de 4 días. Las solicitudes deben enviarse con al menos 2 semanas de anticipación a través del portal de autoservicio y serán aprobadas según la disponibilidad del equipo.</p>
+      <h2>4. Seguridad de la información</h2>
+      <p>Toda la información confidencial de AAA SOFTWARE y sus clientes está protegida bajo acuerdos de confidencialidad (NDA). El empleado no debe compartir, copiar o extraer datos sensibles fuera de las instalaciones o redes autorizadas de la empresa.</p>
+      <div class="footer">© 2025 AAA SOFTWARE. Todos los derechos reservados. Este documento es de uso interno y confidencial.</div>
+      <script>window.print();<\/script></body></html>
+    `;
+    const nuevaVentana = window.open('', '_blank');
+    nuevaVentana.document.write(politicaHTML);
+    nuevaVentana.document.close();
+  }
+  window.abrirPoliticaPDF = abrirPoliticaPDF;
 })();

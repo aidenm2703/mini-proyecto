@@ -75,25 +75,38 @@
     { name: 'Daniela Solís', position: 'Redactora de contenido', dept: 'Marketing', phone: '2244-3330', ext: 'Ext. 130', email: 'daniela.solis@aaa.com' }
   ];
   const departments = ['Tecnología', 'Ventas', 'Recursos Humanos', 'Finanzas', 'Operaciones', 'Marketing'];
+  const positionsFor = (dept) => dept === 'todos' ? [...new Set(directory.map((p) => p.position))] : [...new Set(directory.filter((p) => p.dept === dept).map((p) => p.position))];
+  const deptsFor = (position) => position === 'todos' ? departments : [...new Set(directory.filter((p) => p.position === position).map((p) => p.dept))];
   const renderDirectory = () => {
     const t = window.AAA.t;
     const query = document.getElementById('directorySearch').value.trim().toLowerCase();
     const dept = document.getElementById('directoryTeam').value;
     const position = document.getElementById('directoryPosition').value;
     const rows = directory.filter((p) => (dept === 'todos' || p.dept === dept) && (position === 'todos' || p.position === position) && (!query || `${p.name} ${p.position} ${p.dept}`.toLowerCase().includes(query)));
-    document.getElementById('directoryCount').innerHTML = t('Mostrando') + ' <b>' + rows.length + '</b> ' + t('de') + ' ' + directory.length + ' ' + t('colaboradores');
-    document.getElementById('directoryBody').innerHTML = rows.length ? rows.map((p) => `<tr><td>${window.AAA.esc(p.name)}</td><td>${window.AAA.esc(p.position)}</td><td>${t(p.dept)}</td><td>${window.AAA.esc(p.phone)}</td><td>${window.AAA.esc(p.ext)}</td><td>${window.AAA.esc(p.email)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="6">' + t('No hay resultados.') + '</td></tr>';
+    document.getElementById('directoryCount').innerHTML = t('Mostrando {{n}} de {{total}} colaboradores').replace('{{n}}', rows.length).replace('{{total}}', directory.length);
+    document.getElementById('directoryBody').innerHTML = rows.length ? rows.map((p) => `<tr><td>${window.AAA.esc(p.name)}</td><td>${window.AAA.esc(t(p.position))}</td><td>${t(p.dept)}</td><td>${window.AAA.esc(p.phone)}</td><td>${window.AAA.esc(p.ext)}</td><td>${window.AAA.esc(p.email)}</td></tr>`).join('') : '<tr class="empty-row"><td colspan="6">' + t('No hay resultados.') + '</td></tr>';
   };
-  const fillSelects = () => {
+  const fillSelects = (changed = null) => {
     const t = window.AAA.t;
+    const esc = window.AAA.esc;
     const deptSelect = document.getElementById('directoryTeam');
     const positionSelect = document.getElementById('directoryPosition');
-    deptSelect.innerHTML = '<option value="todos">' + t('Todos los departamentos') + '</option>' + departments.map((d) => `<option value="${d}">${t(d)}</option>`).join('');
-    positionSelect.innerHTML = '<option value="todos">' + t('Todos los puestos') + '</option>' + [...new Set(directory.map((p) => p.position))].map((position) => `<option value="${position}">${window.AAA.esc(position)}</option>`).join('');
+    const dept = deptSelect.value;
+    const position = positionSelect.value;
+    if (changed !== 'position') {
+      const posOptions = positionsFor(dept);
+      positionSelect.innerHTML = '<option value="todos">' + t('Todos los puestos') + '</option>' + posOptions.map((p) => `<option value="${esc(p)}">${esc(t(p))}</option>`).join('');
+      if (!posOptions.includes(position)) positionSelect.value = 'todos';
+    }
+    if (changed !== 'dept') {
+      const deptOptions = deptsFor(position);
+      deptSelect.innerHTML = '<option value="todos">' + t('Todos los departamentos') + '</option>' + deptOptions.map((d) => `<option value="${esc(d)}">${t(d)}</option>`).join('');
+      if (!deptOptions.includes(dept)) deptSelect.value = 'todos';
+    }
   };
   window.renderPage = () => { fillSelects(); renderDirectory(); };
   ['input', 'change'].forEach((eventName) => document.getElementById('directorySearch').addEventListener(eventName, renderDirectory));
-  ['input', 'change'].forEach((eventName) => document.getElementById('directoryTeam').addEventListener(eventName, renderDirectory));
-  ['input', 'change'].forEach((eventName) => document.getElementById('directoryPosition').addEventListener(eventName, renderDirectory));
+  document.getElementById('directoryTeam').addEventListener('change', () => { fillSelects('dept'); renderDirectory(); });
+  document.getElementById('directoryPosition').addEventListener('change', () => { fillSelects('position'); renderDirectory(); });
 </script>
 </body></html>

@@ -25,63 +25,51 @@
 <script src="i18n.js"></script>
 <script src="portal.js"></script>
 <script>
-  const evaluationSections = [
-    { title: 'AUTOEVALUACIÓN', questions: [
-      '¿Cuáles fueron tus principales logros en este periodo?',
-      '¿Qué objetivos cumpliste y cuáles no? ¿Por qué?',
-      '¿Qué habilidades desarrollaste o fortaleciste?',
-      '¿Qué desafíos enfrentaste y cómo los resolviste?',
-      '¿En qué áreas te gustaría mejorar?',
-      '¿Qué apoyo necesitas de tu líder o del equipo para crecer?',
-      '¿Cómo calificarías tu desempeño general?'
-    ]},
-    { title: 'EVALUACIÓN MANAGER', questions: [
-      '¿Cumplió los objetivos/OKRs establecidos?',
-      'Calidad técnica del trabajo entregado',
-      'Cumplimiento de plazos y compromisos',
-      'Capacidad de resolución de problemas',
-      'Comunicación y colaboración con el equipo',
-      'Proactividad e iniciativa',
-      'Adherencia a buenas prácticas',
-      '¿Qué fortalezas destacarías?',
-      '¿Qué áreas de oportunidad identificas?',
-      '¿Está listo para asumir más responsabilidad?'
-    ], textFrom: 8},
-    { title: 'EVALUACIÓN 360°', questions: [
-      '¿Cómo calificarías la colaboración en proyectos conjuntos?',
-      '¿Es clara y efectiva su comunicación?',
-      '¿Comparte conocimiento con el equipo?',
-      '¿Cómo maneja el feedback y los conflictos?',
-      '¿Qué es lo que más valoras de trabajar con esta persona?',
-      '¿Qué podría mejorar?'
-    ], textFrom: 4},
-    { title: 'COMPETENCIAS TÉCNICAS', questions: [
-      'Calidad y mantenibilidad del código',
-      'Capacidad de diseño de soluciones',
-      'Conocimiento del stack del equipo',
-      'Participación en code reviews',
-      'Nivel de autonomía técnica'
-    ]},
-    { title: 'SOFT SKILLS', questions: [
-      'Trabajo en equipo',
-      'Adaptabilidad al cambio',
-      'Gestión del tiempo y prioridades',
-      'Liderazgo',
-      'Mentalidad de mejora continua'
-    ]},
-    { title: 'CIERRE', questions: [
-      'Objetivos para el próximo periodo',
-      'Plan de desarrollo',
-      '¿Interés en cambiar de rol o equipo?'
-    ], allText: true}
+  const evaluationQuestions = [
+    { section: 'Autoevaluación', text: '¿Cuáles fueron tus principales logros en este periodo?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué objetivos cumpliste y cuáles no? ¿Por qué?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué habilidades desarrollaste o fortaleciste?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué desafíos enfrentaste y cómo los resolviste?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿En qué áreas te gustaría mejorar?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué apoyo necesitas de tu líder o del equipo para crecer?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Cómo calificarías tu desempeño general?', type: 'stars' },
+    { section: 'Evaluación Manager', text: '¿Cumplió los objetivos/OKRs establecidos?', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Calidad técnica del trabajo entregado', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Cumplimiento de plazos y compromisos', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Capacidad de resolución de problemas', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Comunicación y colaboración con el equipo', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Proactividad e iniciativa', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Adherencia a buenas prácticas', type: 'stars' },
+    { section: 'Evaluación Manager', text: '¿Qué fortalezas destacarías?', type: 'text' },
+    { section: 'Evaluación Manager', text: '¿Qué áreas de oportunidad identificas?', type: 'text' },
+    { section: 'Evaluación Manager', text: '¿Está listo para asumir más responsabilidad?', type: 'text' },
+    { section: 'Evaluación 360°', text: '¿Cómo calificarías la colaboración en proyectos conjuntos?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Es clara y efectiva su comunicación?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Comparte conocimiento con el equipo?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Cómo maneja el feedback y los conflictos?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Qué es lo que más valoras?', type: 'text' },
+    { section: 'Evaluación 360°', text: '¿Qué podría mejorar?', type: 'text' },
+    { section: 'Competencias técnicas', text: 'Calidad y mantenibilidad del código', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Capacidad de diseño de soluciones', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Conocimiento del stack del equipo', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Participación en code reviews', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Nivel de autonomía técnica', type: 'stars' },
+    { section: 'Soft skills', text: 'Trabajo en equipo', type: 'stars' },
+    { section: 'Soft skills', text: 'Adaptabilidad al cambio', type: 'stars' },
+    { section: 'Soft skills', text: 'Gestión del tiempo', type: 'stars' },
+    { section: 'Soft skills', text: 'Liderazgo', type: 'stars' },
+    { section: 'Soft skills', text: 'Mentalidad de mejora continua', type: 'stars' },
+    { section: 'Cierre', text: 'Objetivos para el próximo periodo', type: 'text' },
+    { section: 'Cierre', text: 'Plan de desarrollo', type: 'text' },
+    { section: 'Cierre', text: '¿Interés en cambiar de rol o equipo?', type: 'text' }
   ];
 
-  const starRow = (name, value = 0) => `<div class="eval-estrellas" data-valor="${value}">
-    <i class="fa-regular fa-star" data-n="1"></i>
-    <i class="fa-regular fa-star" data-n="2"></i>
-    <i class="fa-regular fa-star" data-n="3"></i>
-    <i class="fa-regular fa-star" data-n="4"></i>
-    <i class="fa-regular fa-star" data-n="5"></i>
+  const starHTML = `<div class="star-rating" data-valor="0">
+    <i class="fa-regular fa-star" data-n="1" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="2" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="3" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="4" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="5" style="cursor:pointer; font-size:1.2rem;"></i>
   </div>`;
 
   const renderLastEvaluation = () => {
@@ -92,59 +80,47 @@
 
   window.renderPage = () => {
     const t = window.AAA.t;
-    let n = 0;
-    document.getElementById('objectives').innerHTML = evaluationSections.map((section) => {
-      const html = section.questions.map((question, i) => {
-        n += 1;
-        const num = n;
-        const isText = section.allText || (section.textFrom !== undefined && i >= section.textFrom);
-        if (isText) {
-          return `<div class="eval-pregunta">
-            <p>${num}. ${t(question)}</p>
-            <textarea class="form-input form-textarea" name="preg_${num}" placeholder="${t('Escriba su respuesta...')}"></textarea>
-          </div>`;
-        }
-        return `<div class="eval-pregunta">
-          <p>${num}. ${t(question)}</p>
-          ${starRow(`preg_${num}`)}
-          <input type="hidden" name="preg_${num}" value="0">
-        </div>`;
-      }).join('');
-      return `<h3 class="eval-subtitle">${t(section.title)}</h3>${html}`;
+    const container = document.getElementById('objectives');
+    let lastSection = null;
+    container.innerHTML = evaluationQuestions.map((question, index) => {
+      const num = index + 1;
+      const html = [
+        lastSection !== question.section ? `<h3>${t(question.section)}</h3>` : '',
+        `<div style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">`,
+        `<p style="margin-bottom:5px; font-size:0.9rem;">${num}. ${t(question.text)}</p>`,
+        question.type === 'stars'
+          ? `${starHTML}<input type="hidden" name="p[${num}]" value="0">`
+          : `<textarea style="width:100%;background:#111827;border:1px solid rgba(255,255,255,0.1);color:white;padding:8px;border-radius:6px;min-height:60px;" name="p[${num}]" placeholder="Escribe aquí..."></textarea>`,
+        `</div>`
+      ].join('');
+      lastSection = question.section;
+      return html;
     }).join('');
-    renderLastEvaluation();
-  };
-
-  document.addEventListener('click', function (e) {
-    if (e.target.classList.contains('fa-star') && e.target.closest('.eval-estrellas')) {
-      const container = e.target.closest('.eval-estrellas');
-      const valor = parseInt(e.target.getAttribute('data-n'));
-      container.setAttribute('data-valor', valor);
-      container.querySelectorAll('.fa-star').forEach(star => {
-        const n = parseInt(star.getAttribute('data-n'));
-        if (n <= valor) {
-          star.classList.remove('fa-regular');
-          star.classList.add('fa-solid');
-          star.style.color = '#ffb84d';
-        } else {
-          star.classList.remove('fa-solid');
-          star.classList.add('fa-regular');
-          star.style.color = '';
+    const script = document.createElement('script');
+    script.textContent = `document.querySelectorAll('.star-rating').forEach(container => {
+      container.addEventListener('click', function(e) {
+        if(e.target.tagName === 'I') {
+          const val = parseInt(e.target.getAttribute('data-n'));
+          this.setAttribute('data-valor', val);
+          this.querySelectorAll('i').forEach(s => {
+            const n = parseInt(s.getAttribute('data-n'));
+            if(n <= val) { s.className = 'fa-solid fa-star'; s.style.color = '#ffb84d'; }
+            else { s.className = 'fa-regular fa-star'; s.style.color = ''; }
+          });
+          this.parentElement.querySelector('input[type="hidden"]').value = val;
         }
       });
-      const hidden = container.parentElement.querySelector('input[type="hidden"]');
-      if (hidden) hidden.value = valor;
-    }
-  });
+    });`;
+    container.appendChild(script);
+    renderLastEvaluation();
+  };
 
   document.getElementById('quarterlyEvaluationForm').addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
-    const answeredStars = Object.keys(data).filter((key) => key.startsWith('preg_') && data[key] !== '0').length;
-    if (answeredStars === 0 && !Object.keys(data).some((key) => key.startsWith('preg_') && data[key])) {
-      return window.AAA.showToast(window.AAA.t('Evalúe al menos una pregunta antes de guardar.'), true);
-    }
+    const answered = Object.values(data).some((value) => value && value !== '0');
+    if (!answered) return window.AAA.showToast(window.AAA.t('Responda al menos una pregunta antes de guardar.'), true);
     localStorage.setItem('aaa_quarterly_review', JSON.stringify(data));
     renderLastEvaluation();
     window.AAA.showToast(window.AAA.t('Auto-evaluación guardada.'));

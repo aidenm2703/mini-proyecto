@@ -3,66 +3,125 @@
 <body data-page="nomina">
 <div class="portal-shell">
   <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
-  <main class="portal-page" data-title="Recibos de nómina" data-subtitle="Consulta y descarga tus recibos de pago.">
+  <main class="portal-page" data-title="Recibos de nómina" data-subtitle="Consulta tus recibos de los últimos 3 meses.">
     <header class="portal-topbar" id="portalTopbar"></header>
     <div class="portal-content">
       <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
       <section class="panel">
-        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-invoice-dollar"></i> Recibos de nómina</h2></div>
-        <div class="panel__body"><div class="payroll-list" id="payrollList"></div></div>
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-invoice-dollar"></i> Recibos de nómina</h2><span class="panel__count">Últimos 3 meses</span></div>
+        <div class="panel__body">
+          <div class="payroll-summary" id="payrollSummary"></div>
+          <div class="payroll-list" id="payrollList"></div>
+        </div>
       </section>
     </div>
   </main>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
 <script src="i18n.js"></script>
 <script src="portal.js"></script>
 <script>
-  const payroll = [
-    { employee: 'Ana Rojas', month: 'Enero', year: 2025, amount: '₡950,000' },
-    { employee: 'Diego Chaves', month: 'Enero', year: 2025, amount: '₡820,000' },
-    { employee: 'María López', month: 'Enero', year: 2025, amount: '₡780,000' },
-    { employee: 'Carolina Méndez', month: 'Diciembre', year: 2024, amount: '₡1,200,000' },
-    { employee: 'Andrés Morales', month: 'Diciembre', year: 2024, amount: '₡750,000' },
-    { employee: 'Laura Ramírez', month: 'Noviembre', year: 2024, amount: '₡890,000' }
-  ];
-  const downloadPayroll = (item) => {
-    const t = window.AAA.t;
-    const period = `${item.month} ${item.year}`;
-    const filename = `Recibo-${item.employee.replace(/\s+/g, '-')}-${item.month}-${item.year}.pdf`;
-    if (window.jspdf && window.jspdf.jsPDF) {
-      const doc = new window.jspdf.jsPDF();
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(17);
-      doc.text('AAA Software', 20, 24);
-      doc.setFontSize(12);
-      doc.text(t('Recibo de nómina'), 20, 38);
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(11);
-      doc.text(`${t('Empleado')}: ${item.employee}`, 20, 52);
-      doc.text(`${t('Mes de la nómina')}: ${period}`, 20, 62);
-      doc.text(`${t('Monto')}: ${item.amount}`, 20, 72);
-      doc.save(filename);
-    } else {
-      const blob = new Blob([`AAA Software\n${t('Recibo de nómina')}\n\n${t('Empleado')}: ${item.employee}\n${t('Mes de la nómina')}: ${period}\n${t('Monto')}: ${item.amount}`], { type: 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const profiles = {
+    'María Fernanda López': {
+      position: 'Coordinadora de operaciones',
+      baseGross: 1172000
     }
-    window.AAA.showToast(`${t('Recibo descargado.')} — ${item.employee} · ${period}`);
+  };
+  const currentUserName = (() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('aaa_current_user') || 'null');
+      if (saved && typeof saved.name === 'string' && saved.name.trim()) return saved.name;
+    } catch (e) { /* ignore */ }
+    return 'María Fernanda López';
+  })();
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const lastThreeMonths = () => {
+    const now = new Date();
+    const out = [];
+    for (let i = 2; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      out.push({ month: monthNames[d.getMonth()], year: d.getFullYear() });
+    }
+    return out;
+  };
+  const formatColones = (n) => '₡' + Math.round(n).toLocaleString('es-CR');
+  const receiptFor = (monthData, baseGross) => {
+    const gross = baseGross;
+    const ccss = Math.round(gross * 0.0917);
+    const solidarista = Math.round(gross * 0.05);
+    return {
+      period: `${monthData.month} ${monthData.year}`,
+      ccss,
+      solidarista,
+      net: gross - ccss - solidarista,
+      gross
+    };
+  };
+  const pdfRowsFor = (receipt) => {
+    const t = window.AAA.t;
+    const profile = profiles[currentUserName] || profiles['María Fernanda López'];
+    return [
+      { band: true, bandHeight: 42, parts: [
+        { text: 'AAA Software', x: 50, bold: true, size: 15 },
+        { text: t('Recibo de nómina'), x: 50, size: 10 }
+      ], gap: 56 },
+      { text: t('Recibo de pago'), x: 50, bold: true, size: 14, gap: 26 },
+      { text: t('Nombre completo'), x: 50, size: 10, gap: 14 },
+      { text: currentUserName, x: 50, bold: true, size: 12, gap: 20 },
+      { text: t('Puesto'), x: 50, size: 10, gap: 14 },
+      { text: t(profile.position), x: 50, bold: true, size: 12, gap: 20 },
+      { text: t('Mes de la nómina'), x: 50, size: 10, gap: 14 },
+      { text: receipt.period, x: 50, bold: true, size: 12, gap: 24 },
+      { sep: true, gap: 24 },
+      { text: t('Detalle de la nómina'), x: 50, bold: true, size: 12, gap: 22 },
+      { parts: [
+        { text: t('Salario bruto'), x: 50, size: 11 },
+        { text: formatColones(receipt.gross), right: 540, size: 11 }
+      ], gap: 18 },
+      { parts: [
+        { text: `${t('CCSS')} (9.17%)`, x: 50, size: 11 },
+        { text: `- ${formatColones(receipt.ccss)}`, right: 540, size: 11 }
+      ], gap: 18 },
+      { parts: [
+        { text: `${t('Asociación Solidarista')} (5%)`, x: 50, size: 11 },
+        { text: `- ${formatColones(receipt.solidarista)}`, right: 540, size: 11 }
+      ], gap: 24 },
+      { sep: true, gap: 24 },
+      { parts: [
+        { text: t('Total a recibir'), x: 50, bold: true, size: 12 },
+        { text: formatColones(receipt.net), right: 540, bold: true, size: 12 }
+      ], gap: 16 }
+    ];
+  };
+  const receiptHtml = (receipt) => {
+    const t = window.AAA.t;
+    const esc = window.AAA.esc;
+    const profile = profiles[currentUserName] || profiles['María Fernanda López'];
+    return `<div class="receipt-card"><div class="receipt-card__head"><div><b>${esc(currentUserName)}</b><small>${esc(t(profile.position))}</small></div><span>${esc(receipt.period)}</span></div><div class="receipt-card__amounts"><div><small>${t('Salario bruto')}</small><b>${formatColones(receipt.gross)}</b></div><div class="receipt-card__neg"><small>CCSS (9.17%)</small><b>- ${formatColones(receipt.ccss)}</b></div><div class="receipt-card__neg"><small>${t('Asociación Solidarista')} (5%)</small><b>- ${formatColones(receipt.solidarista)}</b></div><div class="receipt-card__net"><small>${t('Total a recibir')}</small><b>${formatColones(receipt.net)}</b></div></div><div class="receipt-card__actions"><button type="button" class="btn-action btn-action--secondary" data-receipt="${esc(receipt.period)}"><i class="fa-solid fa-file-pdf"></i> ${t('Ver recibo PDF')}</button><button type="button" class="btn-action btn-action--primary" data-download="${esc(receipt.period)}"><i class="fa-solid fa-download"></i> ${t('Descargar')}</button></div></div>`;
+  };
+  const receiptsByPeriod = () => {
+    const profile = profiles[currentUserName] || profiles['María Fernanda López'];
+    return lastThreeMonths().map((m) => receiptFor(m, profile.baseGross));
   };
   window.renderPage = () => {
     const t = window.AAA.t;
-    document.getElementById('payrollList').innerHTML = `<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>${t('Empleado')}</th><th>${t('Mes')}</th><th>${t('Monto')}</th><th>${t('Acción')}</th></tr></thead><tbody>${payroll.map((p, index) => `<tr><td>${window.AAA.esc(p.employee)}</td><td>${p.month} ${p.year}</td><td>${p.amount}</td><td><button type="button" class="btn-action btn-action--secondary" data-receipt="${index}"><i class="fa-solid fa-download"></i> ${t('Descargar PDF')}</button></td></tr>`).join('')}</tbody></table></div>`;
+    const esc = window.AAA.esc;
+    const profile = profiles[currentUserName] || profiles['María Fernanda López'];
+    const receipts = receiptsByPeriod();
+    document.getElementById('payrollSummary').innerHTML = `<div class="payroll-summary__box"><small>${t('Colaborador')}</small><b>${esc(currentUserName)}</b></div><div class="payroll-summary__box"><small>${t('Puesto')}</small><b>${esc(profile.position)}</b></div><div class="payroll-summary__box"><small>${t('Recibos disponibles')}</small><b>${receipts.length}</b></div>`;
+    document.getElementById('payrollList').innerHTML = receipts.map(receiptHtml).join('');
   };
   document.getElementById('payrollList').addEventListener('click', (event) => {
-    const button = event.target.closest('[data-receipt]');
-    if (!button) return;
-    downloadPayroll(payroll[Number(button.dataset.receipt)]);
+    const period = event.target.closest('[data-receipt]')?.dataset.receipt || event.target.closest('[data-download]')?.dataset.download;
+    if (!period) return;
+    const receipt = receiptsByPeriod().find((r) => r.period === period);
+    if (!receipt) return;
+    const pdf = window.AAA.pdf;
+    if (event.target.closest('[data-download]')) {
+      pdf.download(pdfRowsFor(receipt), `Recibo-${period.replace(/\s+/g, '-')}.pdf`);
+    } else {
+      pdf.open(pdfRowsFor(receipt));
+    }
   });
 </script>
 </body></html>

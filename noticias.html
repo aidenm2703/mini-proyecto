@@ -34,7 +34,7 @@
   ];
   window.renderPage = () => {
     const t = window.AAA.t;
-    document.getElementById('newsList').innerHTML = newsItems.map((n) => `<div class="news-item"><i class="fa-solid ${n.tag === 'Celebraciones' ? 'fa-cake-candles' : n.tag === 'RRHH' ? 'fa-users-rectangle' : 'fa-bullhorn'}"></i><div><h4>${window.AAA.esc(n.title)}</h4><small>${window.AAA.esc(n.text)}</small><span class="news-meta"><span class="badge badge--${n.tag === 'Celebraciones' ? 'celebraciones' : n.tag === 'RRHH' ? 'rrhh' : 'general'}">${t(n.tag)}</span>${window.AAA.esc(n.date)}</span></div></div>`).join('');
+    document.getElementById('newsList').innerHTML = newsItems.map((n) => `<div class="news-item"><i class="fa-solid ${n.tag === 'Celebraciones' ? 'fa-cake-candles' : n.tag === 'RRHH' ? 'fa-users-rectangle' : 'fa-bullhorn'}"></i><div><h4>${window.AAA.esc(t(n.title))}</h4><small>${window.AAA.esc(t(n.text))}</small><span class="news-meta"><span class="badge badge--${n.tag === 'Celebraciones' ? 'celebraciones' : n.tag === 'RRHH' ? 'rrhh' : 'general'}">${t(n.tag)}</span>${window.AAA.esc(t(n.date))}</span></div></div>`).join('');
   };
 </script>
 </body></html>

@@ -43,6 +43,29 @@
           <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
         </div>
 
+        <!-- Reconocimiento facial: la cámara se enciende al entrar al login. -->
+        <div class="biometric-auto" id="biometricAuto">
+          <div class="biometric-auto__status" id="biometricAutoStatus"><i class="fa-solid fa-camera"></i><span>Iniciando reconocimiento facial…</span></div>
+          <div class="face-scan" id="faceScan">
+            <video id="biometricAutoVideo" class="biometric-video" autoplay muted playsinline></video>
+            <div class="face-scan__overlay" id="faceScanOverlay" hidden>
+              <div class="face-scan__frame"></div>
+              <div class="face-scan__guides">
+                <span class="face-scan__line"></span>
+                <span class="face-scan__mark face-scan__mark--eye-l"></span>
+                <span class="face-scan__mark face-scan__mark--eye-r"></span>
+                <span class="face-scan__mark face-scan__mark--mouth"></span>
+              </div>
+              <span class="face-scan__label" id="faceScanLabel">Analizando facciones…</span>
+            </div>
+            <div class="face-scan__data" id="faceScanData">
+              <span><i class="fa-solid fa-ruler"></i> Distancia interocular <b id="dataEyes">0.0</b></span>
+              <span><i class="fa-solid fa-scale-balanced"></i> Simetría <b id="dataSymmetry">0%</b></span>
+              <span><i class="fa-solid fa-shield-halved"></i> Confianza <b id="dataConfidence">0%</b></span>
+            </div>
+          </div>
+        </div>
+
         <h1 class="login-title">Bienvenido al sistema de login</h1>
         <p class="login-subtitle">AAA Software · Ingrese sus credenciales aquí</p>
 
@@ -104,13 +127,7 @@
             </div>
           </div>
 
-          <!-- Simulación visual de reconocimiento facial para la presentación. -->
-          <div class="biometric-access">
-            <div class="biometric-camera"><i class="fa-solid fa-camera"></i><span id="biometricStatus">Cámara lista para verificar identidad</span></div>
-            <video id="biometricVideo" class="biometric-video" autoplay muted playsinline hidden></video>
-            <button type="button" id="btnBiometric" class="btn-biometric"><i class="fa-solid fa-fingerprint"></i> Verificar biometría</button>
-          </div>
-
+          <!-- El reconocimiento facial ya ocurre automáticamente arriba de "Bienvenido". -->
           <button type="submit" class="btn-login">
             <i class="fa-solid fa-arrow-right-to-bracket"></i>
             Iniciar sesión
@@ -211,7 +228,7 @@
             </a>
           </li>
           <li class="user-only">
-            <a href="calendario.html" class="sidebar-nav__link" data-section="miCalendario" data-new-tab="true">
+            <a href="calendario.html" class="sidebar-nav__link" data-new-tab="true">
               <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario laboral</span>
             </a>
           </li>
@@ -262,8 +279,8 @@
             </a>
           </li>
           <li class="user-only">
-            <a href="documentos.html" class="sidebar-nav__link" data-section="documentos" data-new-tab="true">
-              <i class="fa-solid fa-folder-open"></i><span class="sidebar-nav__text">Documentos legales</span>
+            <a href="politica.html" class="sidebar-nav__link" data-section="politica" data-new-tab="true">
+              <i class="fa-solid fa-file-shield"></i><span class="sidebar-nav__text">Política interna</span>
             </a>
           </li>
         </ul>
@@ -337,6 +354,12 @@
               <span class="header-user__role" id="headerUserRole">Admin</span>
             </div>
           </div>
+
+          <!-- Botón Mi Perfil en header -->
+          <button id="btnMiPerfil" class="btn-action btn-action--secondary header-user-profile" type="button" aria-label="Mi Perfil">
+            <i class="fa-solid fa-user"></i>
+            Mi Perfil
+          </button>
 
           <!-- Botón logout en header -->
           <button id="btnHeaderLogout" class="btn-header-logout" aria-label="Cerrar sesión">
@@ -859,14 +882,6 @@
 
         </section>
 
-        <!-- Calendario de ejemplo para distinguir descansos, pagos dobles y días laborales. -->
-        <section id="secMiEncuesta" class="content-section user-only" aria-label="Encuesta de satisfacción">
-          <div class="panel survey-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-square-poll-vertical"></i> Encuesta de satisfacción</h2><span class="panel__count">Tu opinión cuenta</span></div><div class="panel__body"><p class="schedule-note">Califica tu experiencia laboral para que administración pueda mejorar.</p><form id="employeeSurvey"><div id="employeeSurveyQuestions" class="survey-questions"></div><div class="form-group"><label for="surveyComment">Comentario opcional</label><textarea id="surveyComment" class="form-input form-textarea" placeholder="¿Qué podemos mejorar?"></textarea></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar encuesta</button></form></div></div>
-        </section>
-        <section id="secMiCalendario" class="content-section user-only" aria-label="Calendario laboral">
-          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario laboral · Agosto 2026</h2></div><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="workCalendar"></div></div></div>
-        </section>
-
         <footer class="company-footer" aria-label="Identidad de AAA Software">
           <a class="company-principles-link" href="filosofia.html" target="_blank" rel="noopener" aria-label="Abrir misión, visión y valores">
           <article><i class="fa-solid fa-bullseye"></i><div><h3>Misión</h3><p>Crear software confiable que simplifique el trabajo y ayude a crecer a nuestros clientes.</p></div></article>
@@ -883,6 +898,37 @@
   <!-- ================================================================
        MODAL DE CONFIRMACIÓN (para eliminar registros)
        ================================================================ -->
+  <div id="modalPerfil" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="perfilModalTitle">
+    <div class="modal-box">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title" id="perfilModalTitle">Mi Perfil</h3>
+        <button class="btn-icon" id="btnCerrarPerfil" type="button" aria-label="Cerrar perfil">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="perfilForm" class="form-panel__body form-grid" novalidate>
+        <div class="form-group">
+          <label for="perfilNombre">Nombre completo</label>
+          <input id="perfilNombre" type="text" class="form-input" placeholder="Ej: María López" required>
+        </div>
+        <div class="form-group">
+          <label for="perfilCorreo">Correo</label>
+          <input id="perfilCorreo" type="email" class="form-input" placeholder="Ej: maria@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label for="perfilTelefono">Teléfono</label>
+          <input id="perfilTelefono" type="tel" class="form-input" placeholder="Ej: 8888-9999" required>
+        </div>
+        <div class="form-group form-group--full modal-box__actions">
+          <button id="btnGuardarPerfil" class="btn-action btn-action--primary" type="submit">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="confirmModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
     <div class="modal-box">
       <div class="modal-box__icon modal-box__icon--danger">
