@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Cursos y certificaciones | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="formacion">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Cursos y certificaciones" data-subtitle="Acceso a plataformas de aprendizaje y certificaciones completadas.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-book-open"></i> Cursos Disponibles</h2><span class="panel__count">Inscríbete y crece</span></div>
+        <div class="panel__body"><div class="course-grid" id="courseGrid"></div></div>
+      </section>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-certificate"></i> Capacitaciones Completadas</h2><span class="panel__count">Con certificado</span></div>
+        <div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Curso</th><th>Fecha de finalización</th><th>Estado</th><th>Certificado</th></tr></thead><tbody id="completedBody"></tbody></table></div></div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const courses = [
+    { icon: 'fa-code', name: 'Programación / Stack tecnológico', platform: 'Interna', status: 'Pendiente' },
+    { icon: 'fa-code-branch', name: 'Buenas prácticas de código (clean code, patrones, testing)', platform: 'Udemy', status: 'Pendiente' },
+    { icon: 'fa-cloud', name: 'Cloud computing (AWS, Azure, GCP)', platform: 'AWS Training', status: 'Pendiente' },
+    { icon: 'fa-boxes-stacked', name: 'DevOps (CI/CD, Docker, Kubernetes)', platform: 'Linux Academy', status: 'Pendiente' },
+    { icon: 'fa-shield-halved', name: 'Seguridad informática', platform: 'Cybrary', status: 'Pendiente' },
+    { icon: 'fa-robot', name: 'Inteligencia Artificial y herramientas de IA', platform: 'Coursera', status: 'Pendiente' },
+    { icon: 'fa-arrows-spin', name: 'Metodologías ágiles (Scrum, Kanban)', platform: 'Scrum.org', status: 'Pendiente' },
+    { icon: 'fa-comments', name: 'Comunicación efectiva', platform: 'LinkedIn Learning', status: 'Pendiente' },
+    { icon: 'fa-people-roof', name: 'Liderazgo', platform: 'LinkedIn Learning', status: 'Pendiente' },
+    { icon: 'fa-clock', name: 'Gestión del tiempo y productividad', platform: 'Platzi', status: 'Pendiente' }
+  ];
+  const completedCourses = [
+    { name: 'Programación / Stack tecnológico', date: '15 Ene 2025', status: 'Completado' },
+    { name: 'Buenas prácticas de código', date: '20 Feb 2025', status: 'Completado' },
+    { name: 'Metodologías ágiles', date: '10 Mar 2025', status: 'Completado' },
+    { name: 'Comunicación efectiva', date: '05 Abr 2025', status: 'Completado' }
+  ];
+  const enrolledKey = 'aaa_enrolled_courses';
+  const getEnrolled = () => JSON.parse(localStorage.getItem(enrolledKey) || '[]');
+  const downloadCertificate = (course) => {
+    const text = `AAA Software\nCertificado de capacitación\n\nCurso: ${course.name}\nFecha de finalización: ${course.date}\nEstado: ${course.status}`;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Certificado-${course.name.replace(/[^a-z0-9]+/gi, '-')}.txt`;
+    link.click();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    window.AAA.showToast(`${window.AAA.t('Certificado descargado.')} — ${window.AAA.t(course.name)}`);
+  };
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    const enrolled = getEnrolled();
+    document.getElementById('courseGrid').innerHTML = courses.map((course, index) => {
+      const isEnrolled = enrolled.includes(course.name);
+      return `<div class="course-card"><i class="fa-solid ${course.icon}"></i><b>${window.AAA.esc(t(course.name))}</b><span class="course-meta"><small><i class="fa-solid fa-building-columns"></i>${window.AAA.esc(t(course.platform))}</small></span><span class="badge ${isEnrolled ? 'badge--warning' : 'badge--pending'}">${t(isEnrolled ? 'Inscrito' : course.status)}</span><div class="course-actions"><button type="button" class="btn-action btn-action--primary" data-course="${index}"><i class="fa-solid ${isEnrolled ? 'fa-circle-check' : 'fa-user-plus'}"></i> ${t(isEnrolled ? 'Inscrito' : 'Inscribirse')}</button>${isEnrolled ? `<button type="button" class="btn-action btn-action--secondary" data-unenroll="${index}"><i class="fa-solid fa-user-minus"></i> ${t('Desinscribirse')}</button>` : ''}</div></div>`;
+    }).join('');
+    document.getElementById('completedBody').innerHTML = completedCourses.map((course, index) => `<tr><td>${window.AAA.esc(t(course.name))}</td><td>${course.date}</td><td><span class="badge badge--available">${t(course.status)}</span></td><td><button type="button" class="btn-action btn-action--secondary" data-cert="${index}"><i class="fa-solid fa-download"></i> ${t('Descargar')}</button></td></tr>`).join('');
+  };
+  document.getElementById('courseGrid').addEventListener('click', (event) => {
+    const enrollButton = event.target.closest('[data-course]');
+    if (enrollButton) {
+      const course = courses[Number(enrollButton.dataset.course)];
+      const enrolled = getEnrolled();
+      if (!enrolled.includes(course.name)) {
+        enrolled.push(course.name);
+        localStorage.setItem(enrolledKey, JSON.stringify(enrolled));
+        window.renderPage();
+        window.AAA.showToast(`${window.AAA.t('¡Felicidades! Te has inscrito en')} ${course.name}.`);
+      }
+      return;
+    }
+    const unenrollButton = event.target.closest('[data-unenroll]');
+    if (unenrollButton) {
+      const course = courses[Number(unenrollButton.dataset.course)];
+      const enrolled = getEnrolled();
+      localStorage.setItem(enrolledKey, JSON.stringify(enrolled.filter((name) => name !== course.name)));
+      window.renderPage();
+      window.AAA.showToast(`${window.AAA.t('Te has desinscrito del curso.')} — ${course.name}`);
+    }
+  });
+  document.getElementById('completedBody').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-cert]');
+    if (!button) return;
+    downloadCertificate(completedCourses[Number(button.dataset.cert)]);
+  });
+</script>
+</body></html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Plan de carrera | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="plan">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Plan de carrera" data-subtitle="Tu plan de crecimiento profesional a mediano y largo plazo.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-sitemap"></i> Plan de carrera y objetivos individuales</h2></div>
+        <div class="panel__body">
+          <p class="schedule-note">Próximos pasos en tu crecimiento</p>
+          <div class="career-steps" id="careerSteps">
+            <div class="career-step reached"><i class="fa-solid fa-seedling"></i><div><h4>Especialista de inventario</h4><small>Corto plazo · 0–1 años</small></div></div>
+            <div class="career-step"><i class="fa-solid fa-arrow-trend-up"></i><div><h4>Coordinador de almacén</h4><small>Mediano plazo · 1–3 años</small></div></div>
+            <div class="career-step"><i class="fa-solid fa-flag-checkered"></i><div><h4>Jefe de operaciones logísticas</h4><small>Largo plazo · 3–5 años</small></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const careerSteps = [
+    { icon: 'fa-seedling', title: 'Especialista de inventario', meta: 'Corto plazo · 0–1 años', reached: true },
+    { icon: 'fa-arrow-trend-up', title: 'Coordinador de almacén', meta: 'Mediano plazo · 1–3 años', reached: false },
+    { icon: 'fa-flag-checkered', title: 'Jefe de operaciones logísticas', meta: 'Largo plazo · 3–5 años', reached: false }
+  ];
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    document.getElementById('careerSteps').innerHTML = careerSteps.map((step) => `<div class="career-step ${step.reached ? 'reached' : ''}"><i class="fa-solid ${step.icon}"></i><div><h4>${t(step.title)}</h4><small>${t(step.meta)}</small></div></div>`).join('');
+  };
+</script>
+</body></html>
