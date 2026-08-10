@@ -120,7 +120,7 @@
     if (event.target.closest('[data-download]')) {
       pdf.download(pdfRowsFor(receipt), `Recibo-${period.replace(/\s+/g, '-')}.pdf`);
     } else {
-      pdf.open(pdfRowsFor(receipt));
+      pdf.openDocument(pdfRowsFor(receipt), { title: `${t('Recibo de nómina')} - ${receipt.period}` });
     }
   });
 </script>

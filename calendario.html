@@ -30,16 +30,18 @@
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
   const weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const holidays = [
-    { m: 0, d: 1, name: 'Año Nuevo', workers: ['Diego Castro', 'María José Vargas', 'Esteban Rojas'] },
-    { m: 3, d: 11, name: 'Día de Juan Santamaría', workers: ['Andrés Mora', 'Gabriela Navarro'] },
-    { m: 3, d: 17, name: 'Viernes Santo', workers: ['Ana Patricia Solano', 'Cindy Herrera'] },
-    { m: 4, d: 1, name: 'Día del Trabajo', workers: ['Ana Rojas', 'Melissa Blanco', 'Jonathan Picado'] },
-    { m: 6, d: 25, name: 'Anexión del Partido de Nicoya', workers: ['María Fernanda López', 'Sofía Rojas', 'Kevin Ureña'] },
-    { m: 7, d: 2, name: 'Día de la Virgen de los Ángeles', workers: ['Lucía Vargas', 'Fabián Castro'] },
-    { m: 7, d: 15, name: 'Día de la Madre', workers: ['Paula Jiménez', 'Fernando Agüero', 'Silvia Cordero'] },
-    { m: 8, d: 15, name: 'Día de la Independencia', workers: ['Natalia Quesada', 'Jorge Fallas', 'Manuel Sánchez'] },
-    { m: 9, d: 12, name: 'Día de las Culturas', workers: ['Rebeca Mora', 'Alonso Vega', 'Daniela Solís'] },
-    { m: 11, d: 25, name: 'Navidad', workers: ['Pamela Murillo', 'Karla Morales', 'Luis Eduardo Chaves'] }
+    { m: 0, d: 1, name: 'Año Nuevo', workers: ['Marco Vega', 'Laura Jiménez', 'Sofía Ramírez'], pay: true },
+    { m: 3, d: 2, name: 'Jueves Santo', workers: ['Jorge Castro', 'Valentina Mora'], pay: true },
+    { m: 3, d: 3, name: 'Viernes Santo', workers: ['Andrés Solís', 'Camila Rojas'], pay: true },
+    { m: 3, d: 11, name: 'Día de Juan Santamaría', workers: ['Diego Vargas', 'Isabel Rojas'], pay: true },
+    { m: 4, d: 1, name: 'Día del Trabajo', workers: ['Fernando Ruiz', 'Marco Vega', 'Laura Jiménez'], pay: true },
+    { m: 6, d: 25, name: 'Anexión del Partido de Nicoya', workers: ['Sofía Ramírez', 'Jorge Castro'], pay: true },
+    { m: 7, d: 2, name: 'Día de la Virgen de los Ángeles', workers: ['Valentina Mora', 'Andrés Solís'], pay: false },
+    { m: 7, d: 15, name: 'Día de la Madre', workers: ['Camila Rojas', 'Diego Vargas', 'Isabel Rojas'], pay: true },
+    { m: 7, d: 31, name: 'Día de la Persona Negra y la Cultura Afrocostarricense', workers: ['Fernando Ruiz', 'Marco Vega'], pay: false },
+    { m: 8, d: 15, name: 'Día de la Independencia', workers: ['Laura Jiménez', 'Sofía Ramírez', 'Jorge Castro'], pay: true },
+    { m: 11, d: 1, name: 'Abolición del Ejército', workers: ['Valentina Mora', 'Andrés Solís'], pay: false },
+    { m: 11, d: 25, name: 'Navidad', workers: ['Camila Rojas', 'Diego Vargas', 'Fernando Ruiz'], pay: true }
   ];
   const holidayKey = (day, month) => holidays.find((h) => h.m === month && h.d === day);
   window.renderPage = () => {
@@ -56,7 +58,8 @@
     document.getElementById('nextHoliday').innerHTML =
       `<p class="next-holiday__date"><b>${t(weekdays[nextDate.getDay()])} ${next.d} de ${t(monthNames[next.m])}</b></p>`
       + `<p class="next-holiday__name"><i class="fa-solid fa-umbrella-beach"></i> ${t(next.name)}</p>`
-      + `<p class="next-holiday__workers">${t('Trabajan')}: <b>${next.workers.map((w) => esc(w)).join(', ')}</b></p>`;
+      + `<p class="next-holiday__workers">${t('Trabajan')}: <b>${next.workers.map((w) => esc(w)).join(', ')}</b></p>`
+      + `<p class="next-holiday__pay"><i class="fa-solid fa-money-bill-wave"></i> ${next.pay ? t('Pago doble') : t('Feriado de pago no obligatorio')}</p>`;
 
     document.getElementById('calendar').innerHTML = monthNames.map((month, monthIndex) => {
       const daysInMonth = new Date(calendarYear, monthIndex + 1, 0).getDate();
@@ -69,7 +72,7 @@
           const free = weekday === 0 || weekday === 6;
           const holiday = holidayKey(day, monthIndex);
           if (holiday) {
-            return `<div class="calendar-day holiday-day ${next === holiday ? 'holiday-day--next' : ''}"><b>${day}</b><small class="holiday-pay">${t('Pago doble')}</small><small class="holiday-names">${t(holiday.name)}<br>${holiday.workers.map((w) => esc(w)).join(', ')}</small></div>`;
+            return `<div class="calendar-day holiday-day ${next === holiday ? 'holiday-day--next' : ''}"><b>${day}</b><small class="holiday-pay">${holiday.pay ? t('Pago doble') : t('Feriado')}</small><small class="holiday-names">${t(holiday.name)}<br>${holiday.workers.map((w) => esc(w)).join(', ')}</small></div>`;
           }
           return `<div class="calendar-day ${free ? 'calendar-day--free' : 'calendar-day--work'}"><b>${day}</b><small>${free ? t('Libre') : t('Laboral')}</small></div>`;
         });

@@ -73,6 +73,25 @@ document.addEventListener('DOMContentLoaded', () => {
     window.setTimeout(() => playTone(155.56, 0.34, 'triangle', 0.09), 190);
   }
 
+  // Alarma de seguridad: sirena intermitente para el cierre de acceso.
+  function playAlarmSound() {
+    const context = getAudioContext();
+    const duration = 0.35;
+    let start = context.currentTime;
+    for (let i = 0; i < 6; i++) {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = 'square';
+      oscillator.frequency.setValueAtTime(i % 2 === 0 ? 660 : 440, start);
+      gain.gain.setValueAtTime(0.12, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start(start);
+      oscillator.stop(start + duration);
+      start += duration;
+    }
+  }
+
   /* ----------------------------------------------------------------
      ACCESO
   ---------------------------------------------------------------- */
@@ -138,6 +157,13 @@ document.addEventListener('DOMContentLoaded', () => {
     $('loginError').style.display = 'none';
   });
 
+  // La cámara biométrica se enciende solo cuando el usuario toca el botón.
+  $('btnStartBiometric').addEventListener('click', () => {
+    const biometric = $('biometricAuto');
+    if (biometric) biometric.hidden = false;
+    startFaceScan();
+  });
+
   // Alterna el tipo del input sin modificar el texto escrito por la persona.
   $('btnTogglePass').addEventListener('click', () => {
     const input = $('loginPass');
@@ -166,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Muestra el aviso y emite el sonido de fallo; cerrar solo oculta el aviso.
   function showEmergency() {
     $('emergencyModal').style.display = 'grid';
-    playFailureSound();
+    playAlarmSound();
   }
   $('btnCloseEmergency').addEventListener('click', () => {
     $('emergencyModal').style.display = 'none';
@@ -219,7 +245,6 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.removeItem('aaa_current_user');
     $('dashboardScreen').style.display = 'none';
     $('loginScreen').style.display = 'flex';
-    startFaceScan();
     $('loginForm').reset();
     selectedRole = null;
     $('loginForm').style.display = 'none';
@@ -466,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
       video.srcObject = null;
       overlay.hidden = true;
       status.classList.add('is-error');
-      status.innerHTML = '<i class="fa-solid fa-shield-halved"></i><span>Persona no reconocida. Cámara apagada. Ingrese con su contraseña.</span>';
+      status.innerHTML = '<i class="fa-solid fa-shield-halved"></i><span>Rostro no reconocido, favor digite su contraseña.</span>';
       const pass = $('loginPass'); if (pass) pass.focus();
     }, 2200);
   }
@@ -476,12 +501,95 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderSurveyResults(){const r=JSON.parse(localStorage.getItem(surveyStorage)||'[]'),scores=r.flatMap(x=>x.scores),avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;$('surveySatisfaction').textContent=`${Math.round(avg*20)}%`;$('surveyAverage').textContent=`${avg.toFixed(1)}/5`;$('surveyCount').textContent=r.length;$('surveyBreakdown').innerHTML=employeeQuestions.map((q,i)=>{const v=r.map(x=>x.scores[i]),a=v.length?v.reduce((x,y)=>x+y,0)/v.length:0;return `<div class="survey-bar"><span>${i18nText(q)}</span><b>${(a*20).toFixed(0)}%</b><i><em style="width:${a*20}%"></em></i></div>`}).join('');$('surveyResponsesBody').innerHTML=r.length?r.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${x.date}</td><td>${(x.scores.reduce((a,b)=>a+b,0)/x.scores.length).toFixed(1)}/5</td><td>${escapeHtml(x.comment||'Sin comentario')}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="4">Aún no hay respuestas</td></tr>';}
   $('employeeForm').addEventListener('submit',e=>{e.preventDefault();const list=employees(),username=$('employeeUsername').value.trim().toLowerCase();if(list.some(x=>x.username===username)||users[username])return showToast('Ese usuario ya existe.',true);list.push({name:$('employeeName').value.trim(),username,password:$('employeePassword').value,role:'Usuario'});localStorage.setItem(employeeStorage,JSON.stringify(list));e.currentTarget.reset();renderEmployeeAdmin();showToast('Empleado agregado.');});
   $('taskDate').value=todayKey();$('taskAssignmentForm').addEventListener('submit',e=>{e.preventDefault();const list=assignments();list.push({employee:$('taskEmployee').value,date:$('taskDate').value,title:$('taskTitle').value.trim(),priority:$('taskPriority').value,done:false});localStorage.setItem(assignmentStorage,JSON.stringify(list));e.currentTarget.reset();$('taskDate').value=todayKey();renderEmployeeAdmin();renderTasks();showToast('Tarea asignada.');});
-  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
+  function renderEmployeeAdmin(){const list=employees(),all=[{name:'María Fernanda López',username:'usuario1'},...list],tasks=assignments(),reports=JSON.parse(localStorage.getItem(reportStorage)||'[]');$('taskEmployee').innerHTML=all.map(x=>`<option value="${escapeHtml(x.name)}">${escapeHtml(x.name)}</option>`).join('');$('employeesBody').innerHTML=all.map(x=>`<tr><td>${escapeHtml(x.name)}</td><td>${escapeHtml(x.username)}</td><td>${tasks.filter(t=>t.employee===x.name).length}</td><td><button type="button" class="btn-row" data-call="${escapeHtml(x.name)}" title="Llamar"><i class="fa-solid fa-phone"></i></button><button type="button" class="btn-row" data-email="${escapeHtml(x.name)}" title="Correo"><i class="fa-solid fa-envelope"></i></button></td></tr>`).join('');$('productivityReport').innerHTML=all.map(x=>{const t=tasks.filter(y=>y.employee===x.name),d=t.filter(y=>y.done).length;return `<p><strong>${escapeHtml(x.name)}</strong><br>${d}/${t.length} tareas completadas · ${reports.filter(y=>y.name===x.name).length} reportes</p>`}).join('');const winner=all.map(x=>({name:x.name,count:tasks.filter(t=>t.employee===x.name&&t.done).length})).sort((a,b)=>b.count-a.count)[0];$('monthlyRecognition').innerHTML=`<p><strong>${escapeHtml(winner.name)}</strong> lidera el mes con ${winner.count} tareas completadas.</p>`;renderAssignedTasks();}
   function renderAssignedTasks(){const filter=$('taskPriorityFilter').value, tasks=assignments().filter(task=>filter==='todas'||task.priority===filter);$('assignedTasksBody').innerHTML=tasks.length?tasks.sort((a,b)=>({alta:0,media:1,baja:2}[a.priority]-({alta:0,media:1,baja:2}[b.priority]))).map(task=>`<tr><td>${escapeHtml(task.employee)}</td><td>${escapeHtml(task.title)}</td><td>${task.date}</td><td><span class="task-priority task-priority--${task.priority}">${capitalize(task.priority)}</span></td><td>${task.done?'Completada':'Pendiente'}</td></tr>`).join(''):'<tr class="empty-row"><td colspan="5">No hay tareas para este filtro.</td></tr>';}
   $('taskPriorityFilter').addEventListener('change',renderAssignedTasks);
   $('btnClearTasks').addEventListener('click',()=>{if(!assignments().length)return showToast('No hay tareas para limpiar.');localStorage.removeItem(assignmentStorage);localStorage.removeItem('aaa_task_notifications');renderEmployeeAdmin();renderTasks();showToast('Todas las tareas asignadas fueron eliminadas.');});
   $('dailyReportForm').addEventListener('submit',e=>{e.preventDefault();const r=JSON.parse(localStorage.getItem(reportStorage)||'[]');r.unshift({name:currentEmployeeName(),text:$('dailyReportText').value.trim(),date:todayKey()});localStorage.setItem(reportStorage,JSON.stringify(r));$('dailyReportStatus').textContent='Reporte enviado correctamente.';e.currentTarget.reset();renderEmployeeAdmin();showToast('Reporte de jornada enviado.');});
   renderSurveyResults(); renderEmployeeAdmin();
+
+  /* ----------------------------------------------------------------
+     ACCIONES POR EMPLEADO: llamada simulada, correo y reuniones.
+     El administrador puede contactar a cada colaborador desde la tabla.
+  ---------------------------------------------------------------- */
+  const employeeList = () => [{ name: 'María Fernanda López', username: 'usuario1' }, ...employees()];
+  $('employeesBody').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-call], button[data-email]');
+    if (!button) return;
+    const employee = employeeList().find((item) => item.name === (button.dataset.call || button.dataset.email));
+    if (!employee) return;
+    if (button.hasAttribute('data-call')) openCallModal(employee.name);
+    else openEmailModal(employee);
+  });
+
+  function openEmailModal(employee) {
+    const email = `${employee.username}@aaasoftware.com`;
+    const subject = encodeURIComponent(`Comunicación de AAA Software`);
+    window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${subject}`, '_blank', 'noopener');
+    showToast(`Abriendo Gmail para ${employee.name}.`);
+  }
+
+  let callTimer = null;
+  let callSeconds = 0;
+  function openCallModal(employeeName) {
+    $('callContact').textContent = employeeName;
+    $('callState').textContent = 'Llamando...';
+    $('callTimer').textContent = '00:00';
+    callSeconds = 0;
+    window.clearInterval(callTimer);
+    $('callModal').style.display = 'flex';
+    callTimer = window.setInterval(() => {
+      callSeconds += 1;
+      const minutes = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+      const seconds = String(callSeconds % 60).padStart(2, '0');
+      $('callTimer').textContent = `${minutes}:${seconds}`;
+      if (callSeconds === 3) $('callState').textContent = 'En llamada';
+    }, 1000);
+  }
+  function hangUpCall() {
+    window.clearInterval(callTimer);
+    callTimer = null;
+    $('callModal').style.display = 'none';
+    showToast('Llamada finalizada.');
+  }
+  $('btnColgar').addEventListener('click', hangUpCall);
+  $('btnCerrarLlamada').addEventListener('click', hangUpCall);
+  $('callModal').addEventListener('click', (event) => { if (event.target === $('callModal')) hangUpCall(); });
+
+  function renderMeetingInvitees() {
+    $('meetingInvitees').innerHTML = employeeList().map((item) => `<label class="meeting-invitee"><input type="checkbox" value="${escapeHtml(item.name)}"><span>${escapeHtml(item.name)}</span></label>`).join('');
+  }
+  function openMeetingModal() {
+    $('meetingDate').value = todayKey();
+    $('meetingTime').value = '10:00';
+    renderMeetingInvitees();
+    $('meetingModal').style.display = 'flex';
+  }
+  function closeMeetingModal() {
+    $('meetingModal').style.display = 'none';
+    $('meetingTitle').value = '';
+    $('meetingPlace').value = '';
+  }
+  $('btnNuevaReunion').addEventListener('click', openMeetingModal);
+  $('btnCerrarReunion').addEventListener('click', closeMeetingModal);
+  $('btnCancelarReunion').addEventListener('click', closeMeetingModal);
+  $('meetingModal').addEventListener('click', (event) => { if (event.target === $('meetingModal')) closeMeetingModal(); });
+  $('btnCrearReunion').addEventListener('click', () => {
+    const title = $('meetingTitle').value.trim();
+    const date = $('meetingDate').value;
+    const time = $('meetingTime').value;
+    const place = $('meetingPlace').value.trim();
+    const invitees = [...document.querySelectorAll('#meetingInvitees input:checked')].map((checkbox) => checkbox.value);
+    if (!title || !date || !time) return showToast('Complete el título, la fecha y la hora.', true);
+    if (!invitees.length) return showToast('Seleccione al menos un empleado.', true);
+    const dateLabel = new Date(`${date}T${time}`).toLocaleDateString('es-GT', { weekday: 'long', day: 'numeric', month: 'long' });
+    const list = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]');
+    list.unshift({ title, date: dateLabel, time, detail: `Invitación a “${title}”. Lugar: ${place || 'Por definir'}. Empleados: ${invitees.join(', ')}.` });
+    localStorage.setItem('aaa_meeting_notifications', JSON.stringify(list));
+    closeMeetingModal();
+    playSuccessSound();
+    showToast('Invitación a reunión enviada a los seleccionados.');
+  });
 
 
   Object.entries(modules).forEach(([key, config]) => setupModule(key, config));
@@ -694,6 +802,5 @@ document.addEventListener('DOMContentLoaded', () => {
   renderTraceability();
   renderNotifications();
   restoreSession();
-  if ($('loginScreen').style.display !== 'none') startFaceScan();
   startInteractiveBackground();
 });

@@ -58,20 +58,31 @@
     const enrolled = getEnrolled();
     document.getElementById('courseGrid').innerHTML = courses.map((course, index) => {
       const isEnrolled = enrolled.includes(course.name);
-      return `<div class="course-card"><i class="fa-solid ${course.icon}"></i><b>${window.AAA.esc(t(course.name))}</b><span class="course-meta"><small><i class="fa-solid fa-building-columns"></i>${window.AAA.esc(t(course.platform))}</small></span><span class="badge ${isEnrolled ? 'badge--warning' : 'badge--pending'}">${t(isEnrolled ? 'Inscrito' : course.status)}</span><button type="button" class="btn-action btn-action--primary" data-course="${index}"><i class="fa-solid ${isEnrolled ? 'fa-circle-check' : 'fa-user-plus'}"></i> ${t(isEnrolled ? 'Inscrito' : 'Inscribirse')}</button></div>`;
+      return `<div class="course-card"><i class="fa-solid ${course.icon}"></i><b>${window.AAA.esc(t(course.name))}</b><span class="course-meta"><small><i class="fa-solid fa-building-columns"></i>${window.AAA.esc(t(course.platform))}</small></span><span class="badge ${isEnrolled ? 'badge--warning' : 'badge--pending'}">${t(isEnrolled ? 'Inscrito' : course.status)}</span><div class="course-actions"><button type="button" class="btn-action btn-action--primary" data-course="${index}"><i class="fa-solid ${isEnrolled ? 'fa-circle-check' : 'fa-user-plus'}"></i> ${t(isEnrolled ? 'Inscrito' : 'Inscribirse')}</button>${isEnrolled ? `<button type="button" class="btn-action btn-action--secondary" data-unenroll="${index}"><i class="fa-solid fa-user-minus"></i> ${t('Desinscribirse')}</button>` : ''}</div></div>`;
     }).join('');
     document.getElementById('completedBody').innerHTML = completedCourses.map((course, index) => `<tr><td>${window.AAA.esc(t(course.name))}</td><td>${course.date}</td><td><span class="badge badge--available">${t(course.status)}</span></td><td><button type="button" class="btn-action btn-action--secondary" data-cert="${index}"><i class="fa-solid fa-download"></i> ${t('Descargar')}</button></td></tr>`).join('');
   };
   document.getElementById('courseGrid').addEventListener('click', (event) => {
-    const button = event.target.closest('[data-course]');
-    if (!button) return;
-    const course = courses[Number(button.dataset.course)];
-    const enrolled = getEnrolled();
-    if (enrolled.includes(course.name)) return;
-    enrolled.push(course.name);
-    localStorage.setItem(enrolledKey, JSON.stringify(enrolled));
-    window.renderPage();
-    window.AAA.showToast(`${window.AAA.t('Inscrito')} — ${course.name}`);
+    const enrollButton = event.target.closest('[data-course]');
+    if (enrollButton) {
+      const course = courses[Number(enrollButton.dataset.course)];
+      const enrolled = getEnrolled();
+      if (!enrolled.includes(course.name)) {
+        enrolled.push(course.name);
+        localStorage.setItem(enrolledKey, JSON.stringify(enrolled));
+        window.renderPage();
+        window.AAA.showToast(`${window.AAA.t('¡Felicidades! Te has inscrito en')} ${course.name}.`);
+      }
+      return;
+    }
+    const unenrollButton = event.target.closest('[data-unenroll]');
+    if (unenrollButton) {
+      const course = courses[Number(unenrollButton.dataset.course)];
+      const enrolled = getEnrolled();
+      localStorage.setItem(enrolledKey, JSON.stringify(enrolled.filter((name) => name !== course.name)));
+      window.renderPage();
+      window.AAA.showToast(`${window.AAA.t('Te has desinscrito del curso.')} — ${course.name}`);
+    }
   });
   document.getElementById('completedBody').addEventListener('click', (event) => {
     const button = event.target.closest('[data-cert]');

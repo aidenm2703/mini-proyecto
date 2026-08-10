@@ -21,7 +21,7 @@
     { href: 'directorio.html', page: 'directorio', label: 'Directorio de empleados', icon: 'fa-address-book' },
     { href: 'eventos.html', page: 'eventos', label: 'Calendario de eventos', icon: 'fa-calendar-days' },
     { href: 'nomina.html', page: 'nomina', label: 'Recibos de nómina', icon: 'fa-file-invoice-dollar' },
-    { page: 'documentos', label: 'Política Interna', icon: 'fa-folder-open', action: 'abrirPoliticaPDF' }
+    { href: 'politica.html', page: 'politica', label: 'Política interna', icon: 'fa-file-shield' }
   ];
   const currentPage = document.body.dataset.page || '';
 
@@ -36,7 +36,9 @@
     const alerts = JSON.parse(localStorage.getItem('aaa_security_alerts') || '[]');
     const alertItems = alerts.slice(0, 2).map((alert) => ({ icon: 'fa-triangle-exclamation', title: 'Intento de acceso', text: `${alert.attemptedUser} intentó ingresar a las ${alert.time}.`, time: alert.date }));
     const taskUpdates = JSON.parse(localStorage.getItem('aaa_task_notifications') || '[]').slice(0, 5).map((item) => ({ icon: item.done ? 'fa-circle-check' : 'fa-rotate-left', title: item.done ? 'Tarea completada' : 'Tarea reabierta', text: `${item.employee}: ${item.title}`, time: item.time }));
-    visibleNotifications = [...taskUpdates, ...alertItems, ...DEFAULT_NOTIFICATIONS];
+    const meetings = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]');
+    const meetingItems = meetings.slice(0, 5).map((item) => ({ icon: 'fa-video', title: 'Invitación a reunión', text: `${item.title} · ${item.date}`, detail: item.detail, time: item.time }));
+    visibleNotifications = [...meetingItems, ...taskUpdates, ...alertItems, ...DEFAULT_NOTIFICATIONS];
   }
 
   function renderNotifications() {
@@ -59,8 +61,6 @@
           ? `<button type="button" class="portal-nav__link ${page.page === currentPage ? 'active' : ''}" data-nav-action="${page.action}" title="${esc(t(page.label))}"><i class="fa-solid ${page.icon}"></i><span>${esc(t(page.label))}</span></button>`
           : `<a class="portal-nav__link ${page.page === currentPage ? 'active' : ''}" href="${page.href}" title="${esc(t(page.label))}"><i class="fa-solid ${page.icon}"></i><span>${esc(t(page.label))}</span></a>`).join('')}</nav>
         <div class="portal-nav__user"><span class="portal-nav__avatar">${esc(employeeName().charAt(0).toUpperCase())}</span><span class="portal-nav__user-name">${esc(employeeName())}</span><a class="portal-nav__logout" href="index.html" title="${esc(t('Cerrar sesión'))}"><i class="fa-solid fa-right-from-bracket"></i></a></div>`;
-      const navAction = nav.querySelector('[data-nav-action="abrirPoliticaPDF"]');
-      if (navAction) navAction.addEventListener('click', (event) => { event.preventDefault(); window.abrirPoliticaPDF(); });
     }
 
     const topbar = document.getElementById('portalTopbar');
@@ -261,6 +261,81 @@
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   window.AAA.pdf = { open: openPdf, download: downloadPdf };
+  // Abre el PDF dentro de una página con barra de herramientas
+  // (Imprimir y Volver a la página anterior).
+  const openDocument = (rows, options = {}) => {
+    const url = URL.createObjectURL(pdfBlob(rows));
+    const win = window.open('', '_blank');
+    if (!win) { window.location.href = url; return; }
+    const title = options.title || 'Documento';
+    win.document.write(
+      '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
+      '<style>' +
+      'body{margin:0;font-family:Arial,sans-serif;background:#eef1f5;}' +
+      '.doc-toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fff;border-bottom:1px solid #d0d7e2;box-shadow:0 1px 4px rgba(0,0,0,.08);}' +
+      '.doc-toolbar__title{font-weight:700;color:#1d4ed8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
+      '.doc-toolbar button{border:1px solid #c3cbd8;background:#fff;color:#1d4ed8;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}' +
+      '.doc-toolbar button:hover{background:#eef4ff;}' +
+      '.doc-toolbar button.primary{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}' +
+      'iframe{width:100%;height:calc(100vh - 60px);border:0;display:block;}' +
+      '</style></head><body>' +
+      '<div class="doc-toolbar"><span class="doc-toolbar__title">' + esc(title) + '</span>' +
+      '<button class="primary" onclick="window.print()">Imprimir</button>' +
+      '<button onclick="window.history.length > 1 ? window.history.back() : window.close()">Volver a la página anterior</button>' +
+      '</div><iframe src="' + url + '"></iframe></body></html>'
+    );
+    win.document.close();
+  };
+  window.AAA.pdf.openDocument = openDocument;
+
+  // ================================================================
+  //  Llamada simulada estilo videollamada (administrador).
+  // ================================================================
+  function startCall(names) {
+    const people = Array.isArray(names) ? names : [names];
+    const overlay = document.createElement('div');
+    overlay.className = 'call-modal';
+    overlay.innerHTML =
+      '<div class="call-modal__box">' +
+      '<div class="call-modal__avatar"><i class="fa-solid fa-user-tie"></i></div>' +
+      '<p class="call-modal__name">' + esc(people.join(', ')) + '</p>' +
+      '<p class="call-modal__status"><i class="fa-solid fa-spinner fa-spin"></i> Conectando…</p>' +
+      '<div class="call-modal__actions">' +
+      '<button type="button" class="call-modal__btn call-modal__btn--mute" title="Silenciar"><i class="fa-solid fa-microphone"></i></button>' +
+      '<button type="button" class="call-modal__btn call-modal__btn--hang" title="Colgar"><i class="fa-solid fa-phone-slash"></i></button>' +
+      '<button type="button" class="call-modal__btn call-modal__btn--video" title="Cámara"><i class="fa-solid fa-video"></i></button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    const status = overlay.querySelector('.call-modal__status');
+    const hang = overlay.querySelector('.call-modal__btn--hang');
+    const mute = overlay.querySelector('.call-modal__btn--mute');
+    const video = overlay.querySelector('.call-modal__btn--video');
+    const finish = () => { overlay.remove(); showToast('Llamada finalizada.'); };
+    const timer = window.setTimeout(() => {
+      if (status) status.innerHTML = '<i class="fa-solid fa-phone-volume"></i> En llamada con ' + esc(people.join(', '));
+    }, 2600);
+    hang.addEventListener('click', () => { window.clearTimeout(timer); finish(); });
+    mute.addEventListener('click', () => {
+      const muted = mute.classList.toggle('active');
+      mute.innerHTML = '<i class="fa-solid fa-microphone' + (muted ? '-slash' : '') + '"></i>';
+    });
+    video.addEventListener('click', () => {
+      const on = video.classList.toggle('active');
+      video.innerHTML = '<i class="fa-solid fa-video' + (on ? '-slash' : '') + '"></i>';
+    });
+    overlay.addEventListener('click', (event) => { if (event.target === overlay) finish(); });
+  }
+
+  // Guarda una invitación a reunión y la refleja en las notificaciones.
+  function addMeetingNotification(meeting) {
+    const list = JSON.parse(localStorage.getItem('aaa_meeting_notifications') || '[]');
+    list.unshift({ title: meeting.title, date: meeting.date, time: meeting.time, detail: meeting.detail });
+    localStorage.setItem('aaa_meeting_notifications', JSON.stringify(list));
+    renderNotifications();
+    showToast('Invitación a reunión enviada.');
+  }
+  window.AAA.startCall = startCall;
+  window.AAA.addMeetingNotification = addMeetingNotification;
 
   // ================================================================
   //  Renderizado del módulo.

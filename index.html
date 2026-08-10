@@ -43,8 +43,8 @@
           <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
         </div>
 
-        <!-- Reconocimiento facial: la cámara se enciende al entrar al login. -->
-        <div class="biometric-auto" id="biometricAuto">
+        <!-- Verificación biométrica: solo se muestra cuando el usuario toca el botón. -->
+        <div class="biometric-auto" id="biometricAuto" hidden>
           <div class="biometric-auto__status" id="biometricAutoStatus"><i class="fa-solid fa-camera"></i><span>Iniciando reconocimiento facial…</span></div>
           <div class="face-scan" id="faceScan">
             <video id="biometricAutoVideo" class="biometric-video" autoplay muted playsinline></video>
@@ -65,6 +65,12 @@
             </div>
           </div>
         </div>
+
+        <!-- Verificación biométrica bajo demanda. -->
+        <button type="button" id="btnStartBiometric" class="btn-biometric" aria-label="Iniciar verificación biométrica">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Verificar biometría</span>
+        </button>
 
         <h1 class="login-title">Bienvenido al sistema de login</h1>
         <p class="login-subtitle">AAA Software · Ingrese sus credenciales aquí</p>
@@ -127,7 +133,7 @@
             </div>
           </div>
 
-          <!-- El reconocimiento facial ya ocurre automáticamente arriba de "Bienvenido". -->
+          <!-- La verificación biométrica se activa solo con el botón superior. -->
           <button type="submit" class="btn-login">
             <i class="fa-solid fa-arrow-right-to-bracket"></i>
             Iniciar sesión
@@ -847,7 +853,7 @@
         <section class="admin-only survey-admin-results" aria-label="Resultados de encuesta"><div class="stats-grid"><div class="stat-card"><div class="stat-card__info"><span id="surveySatisfaction" class="stat-card__value">0%</span><span class="stat-card__label">Satisfacción general</span></div></div><div class="stat-card"><div class="stat-card__info"><span id="surveyAverage" class="stat-card__value">0/5</span><span class="stat-card__label">Promedio de encuestas</span></div></div><div class="stat-card"><div class="stat-card__info"><span id="surveyCount" class="stat-card__value">0</span><span class="stat-card__label">Respuestas recibidas</span></div></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title">Resultados del personal</h2></div><div class="panel__body"><div id="surveyBreakdown" class="survey-breakdown"></div><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Fecha</th><th>Calificación</th><th>Comentario</th></tr></thead><tbody id="surveyResponsesBody"></tbody></table></div></div></div></section>
         <section id="secEmpleados" class="content-section admin-only" aria-label="Empleados y tareas">
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-user-plus"></i> Agregar empleado</h2></div><div class="panel__body"><form id="employeeForm" class="form-grid"><div class="form-group"><label for="employeeName">Nombre completo</label><input id="employeeName" class="form-input" required placeholder="Ej. Ana López"></div><div class="form-group"><label for="employeeUsername">Usuario</label><input id="employeeUsername" class="form-input" required placeholder="ana.lopez"></div><div class="form-group form-group--full"><label for="employeePassword">Contraseña inicial</label><input id="employeePassword" type="password" class="form-input" required></div><button class="btn-action btn-action--primary form-group--full" type="submit"><i class="fa-solid fa-plus"></i> Crear empleado</button></form></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Asignar tarea</h2></div><div class="panel__body"><form id="taskAssignmentForm" class="form-grid"><div class="form-group"><label for="taskEmployee">Empleado</label><select id="taskEmployee" class="form-select" required></select></div><div class="form-group"><label for="taskDate">Día</label><input id="taskDate" type="date" class="form-input" required></div><div class="form-group form-group--full"><label for="taskTitle">Tarea</label><input id="taskTitle" class="form-input" required></div><div class="form-group"><label for="taskPriority">Prioridad</label><select id="taskPriority" class="form-select"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Asignar</button></form></div></div></div>
-          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2><div class="task-admin-actions"><button id="btnNuevaReunion" type="button" class="btn-action btn-action--primary"><i class="fa-solid fa-video"></i> Nueva reunión</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th><th>Acciones</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Control de tareas asignadas</h2><div class="task-admin-actions"><select id="taskPriorityFilter" class="form-select" aria-label="Filtrar por prioridad"><option value="todas">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select><button id="btnClearTasks" type="button" class="btn-action btn-action--danger"><i class="fa-solid fa-broom"></i> Limpiar tareas</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Empleado</th><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody id="assignedTasksBody"></tbody></table></div></div></div>
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-chart-line"></i> Productividad por empleado</h2></div><div class="panel__body" id="productivityReport"></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-trophy"></i> Reconocimiento mensual</h2></div><div class="panel__body" id="monthlyRecognition"></div></div></div>
         </section>
@@ -959,13 +965,51 @@
     <span id="toastMessage">Operación exitosa</span>
   </div>
 
+  <!-- Modal para crear una reunión e invitar a varios empleados. -->
+  <div id="meetingModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="meetingModalTitle">
+    <div class="modal-box">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title" id="meetingModalTitle">Nueva reunión</h3>
+        <button class="btn-icon" id="btnCerrarReunion" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-panel__body form-grid">
+        <div class="form-group form-group--full"><label for="meetingTitle">Título de la reunión</label><input id="meetingTitle" class="form-input" placeholder="Ej: Revisión de métricas"></div>
+        <div class="form-group form-group--full"><label>Empleados invitados</label><div id="meetingInvitees" class="meeting-invitees"></div></div>
+        <div class="form-group"><label for="meetingDate">Día</label><input id="meetingDate" type="date" class="form-input"></div>
+        <div class="form-group"><label for="meetingTime">Hora</label><input id="meetingTime" type="time" class="form-input"></div>
+        <div class="form-group form-group--full"><label for="meetingPlace">Lugar</label><input id="meetingPlace" class="form-input" placeholder="Ej: Sala de reuniones"></div>
+        <div class="form-group form-group--full modal-box__actions">
+          <button id="btnCrearReunion" class="btn-action btn-action--primary" type="button"><i class="fa-solid fa-video"></i> Crear reunión</button>
+          <button id="btnCancelarReunion" class="btn-action btn-action--secondary" type="button">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal que simula una llamada telefónica a un empleado. -->
+  <div id="callModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+    <div class="modal-box modal-box--call">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title">Llamando</h3>
+        <button class="btn-icon" id="btnCerrarLlamada" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="call-box">
+        <div class="call-box__avatar"><i class="fa-solid fa-user-tie"></i></div>
+        <p id="callContact" class="call-box__name">Empleado</p>
+        <p id="callState" class="call-box__state">Llamando...</p>
+        <p id="callTimer" class="call-box__timer">00:00</p>
+        <button id="btnColgar" class="btn-action btn-action--danger" type="button"><i class="fa-solid fa-phone-slash"></i> Colgar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Aviso visual que aparece al llegar a tres intentos de acceso fallidos. -->
   <div id="emergencyModal" class="emergency-modal" style="display:none;" role="alertdialog" aria-modal="true" aria-labelledby="emergencyTitle">
     <div class="emergency-modal__box">
       <i class="fa-solid fa-triangle-exclamation emergency-modal__icon"></i>
       <h2 id="emergencyTitle">Acceso no autorizado</h2>
       <p>Emergencia: usted no es un usuario autorizado.</p>
-      <p class="emergency-modal__detail">Se emitirá un aviso sonoro breve. Verifique sus credenciales antes de volver a intentar.</p>
+      <p class="emergency-modal__detail">La alarma sonará durante 10 segundos. Verifique sus credenciales antes de volver a intentar.</p>
       <button id="btnCloseEmergency" class="btn-action btn-action--danger">Entendido</button>
     </div>
   </div>
