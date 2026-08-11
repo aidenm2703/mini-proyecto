@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Calendario de eventos | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="eventos">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Calendario de eventos" data-subtitle="Año 2026 · Eventos importantes de la empresa.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-check"></i> Próximo evento</h2><span class="panel__count">¡No faltes!</span></div>
+        <div class="panel__body"><div id="nextEvent" class="next-holiday"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Eventos importantes 2026</h2></div>
+        <div class="panel__body">
+          <div class="event-list" id="eventList"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__body">
+          <div class="calendar-legend"><span><b class="legend-dot" style="background:#4dc9f6;"></b>Evento de empresa</span><span><b class="legend-dot" style="background:#ffbf35;"></b>Feriado oficial · Pago doble</span></div>
+          <div class="holiday-months" id="eventMonths"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const eventYear = 2026;
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const weekdayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const events = [
+    { m: 1, d: 13, name: 'Celebración de San Valentín', place: 'Comedor', time: '12:00 p.m.', icon: 'fa-heart' },
+    { m: 2, d: 8, name: 'Día Internacional de la Mujer', place: 'Auditorio', time: '10:00 a.m.', icon: 'fa-venus' },
+    { m: 2, d: 26, name: 'Feria de salud (vacunación)', place: 'Sala de reuniones', time: '8:00 a.m.', icon: 'fa-heart-pulse' },
+    { m: 3, d: 30, name: 'Taller de liderazgo', place: 'Auditorio', time: '2:00 p.m.', icon: 'fa-chalkboard-user' },
+    { m: 5, d: 21, name: 'Día del Padre', place: 'Comedor', time: '11:00 a.m.', icon: 'fa-person-rays' },
+    { m: 6, d: 6, name: 'Reunión con Recursos Humanos', place: 'Sala de reuniones', time: '10:00 a.m.', icon: 'fa-users' },
+    { m: 6, d: 13, name: 'Reunión del equipo de desarrolladores', place: 'Sala de capacitación', time: '2:00 p.m.', icon: 'fa-code' },
+    { m: 6, d: 31, name: 'Celebración de cumpleaños de julio', place: 'Comedor', time: '3:00 p.m.', icon: 'fa-cake-candles' },
+    { m: 7, d: 28, name: 'Fiesta de aniversario de la empresa', place: 'Parque La Sabana', time: '6:00 p.m.', icon: 'fa-cake-candles' },
+    { m: 8, d: 4, name: 'Capacitación en seguridad informática', place: 'Sala de capacitación', time: '9:00 a.m.', icon: 'fa-shield-halved' },
+    { m: 9, d: 30, name: 'Actividad de Halloween', place: 'Comedor', time: '3:00 p.m.', icon: 'fa-ghost' },
+    { m: 10, d: 20, name: 'Capacitación de fin de año', place: 'Auditorio', time: '10:00 a.m.', icon: 'fa-chart-line' },
+    { m: 11, d: 19, name: 'Fiesta de fin de año', place: 'Hotel Hilton', time: '10:00 a.m.', icon: 'fa-gift' }
+  ];
+  const holidays = {
+    '1-0': 'Año Nuevo', '2-3': 'Jueves Santo', '3-3': 'Viernes Santo', '11-3': 'Día de Juan Santamaría', '1-4': 'Día del Trabajo',
+    '25-6': 'Anexión del Partido de Nicoya', '2-7': 'Día de la Virgen de los Ángeles', '15-7': 'Día de la Madre',
+    '31-7': 'Día de la Persona Negra y la Cultura Afrocostarricense', '15-8': 'Día de la Independencia',
+    '1-11': 'Abolición del Ejército', '25-11': 'Navidad'
+  };
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    const esc = window.AAA.esc;
+    const title = document.querySelector('.portal-topbar__titles h1') || document.querySelector('.portal-page h1');
+    if (title) title.textContent = t('Calendario de eventos');
+    const subtitle = document.querySelector('.portal-topbar__titles p:not(.eyebrow)');
+    if (subtitle) subtitle.textContent = `${t('Año')} ${eventYear} · ${t('Eventos importantes de la empresa.')}`;
+
+    const today = new Date();
+    const upcoming = events.find((e) => new Date(eventYear, e.m, e.d) >= today) || events[0];
+    const nextDate = new Date(eventYear, upcoming.m, upcoming.d);
+    document.getElementById('nextEvent').innerHTML =
+      `<p class="next-holiday__date"><b>${t(weekdayNames[nextDate.getDay()])} ${upcoming.d} de ${t(monthNames[upcoming.m])}</b></p>`
+      + `<p class="next-holiday__name"><i class="fa-solid ${upcoming.icon}"></i> ${t(upcoming.name)}</p>`
+      + `<p class="next-holiday__workers">${t('Lugar')}: <b>${t(upcoming.place)}</b> · ${t('Hora')}: <b>${upcoming.time}</b></p>`;
+
+    document.getElementById('eventList').innerHTML = events
+      .slice()
+      .sort((a, b) => new Date(eventYear, a.m, a.d) - new Date(eventYear, b.m, b.d))
+      .map((e, i) => `<div class="event-item ${i === 0 ? 'event-item--next' : ''}"><i class="fa-solid ${e.icon}"></i><div><b>${t(e.name)}</b><small>${t(weekdayNames[new Date(eventYear, e.m, e.d).getDay()])} ${e.d} de ${t(monthNames[e.m])} ${eventYear}</small><span><i class="fa-solid fa-location-dot"></i> ${t(e.place)} · <i class="fa-solid fa-clock"></i> ${e.time}</span></div></div>`).join('');
+
+    document.getElementById('eventMonths').innerHTML = monthNames.map((month, monthIndex) => {
+      const daysInMonth = new Date(eventYear, monthIndex + 1, 0).getDate();
+      const offset = new Date(eventYear, monthIndex, 1).getDay();
+      const cells = weekdayNames.map((n) => `<div class="calendar-weekday">${t(n)}</div>`).join('')
+        + Array.from({ length: offset }, () => '<div class="calendar-day calendar-day--empty"></div>').join('')
+        + Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const event = events.find((e) => e.m === monthIndex && e.d === day);
+          if (event) return `<div class="calendar-day event-day"><b>${day}</b><small class="holiday-pay">${t('Evento')}</small><small class="holiday-names">${t(event.name)}<br>${t(event.place)} · ${event.time}</small></div>`;
+          const holiday = holidays[`${day}-${monthIndex}`];
+          if (holiday) return `<div class="calendar-day holiday-day"><b>${day}</b><small class="holiday-pay">${t('Pago doble')}</small><small class="holiday-names">${t(holiday)}</small></div>`;
+          return `<div class="calendar-day"><b>${day}</b></div>`;
+        }).join('');
+      return `<div class="holiday-month"><h4>${t(month)} ${eventYear}</h4><div class="work-calendar">${cells}</div></div>`;
+    }).join('');
+  };
+</script>
+</body></html>

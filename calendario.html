@@ -1,3 +1,86 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Calendario laboral | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
-<body><main class="standalone-page"><header class="standalone-header"><img src="logo.jpeg" alt="AAA Software"><div><p class="eyebrow">PORTAL DEL COLABORADOR</p><h1>Calendario laboral</h1><p>Agosto 2026 · Jornada y días especiales.</p></div><label class="language-picker" for="languageSelect" title="Cambiar idioma"><i class="fa-solid fa-language"></i><select id="languageSelect" aria-label="Cambiar idioma"><option value="es">ES</option><option value="en">EN</option></select></label><a class="btn-action btn-action--secondary" href="index.html"><i class="fa-solid fa-arrow-left"></i> Volver</a></header><section class="panel"><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="calendar"></div></div></section></main><script src="node_modules/i18next/dist/umd/i18next.min.js"></script><script src="i18n.js"></script><script>window.AAAI18n?.ready?.then(()=>{const s=document.getElementById('languageSelect');if(!s)return;s.value=localStorage.getItem('aaa_language')==='en'?'en':'es';s.addEventListener('change',e=>window.AAAI18n.setLanguage(e.target.value));});</script><script>const c=document.getElementById('calendar'),days=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];c.innerHTML=days.map(x=>`<div class="calendar-weekday">${x}</div>`).join('')+Array.from({length:6},()=>'<div></div>').join('')+Array.from({length:31},(_,i)=>{const d=i+1,w=new Date(2026,7,d).getDay(),free=w===0||w===6,double=d===15;return `<div class="calendar-day ${double?'calendar-day--double':free?'calendar-day--free':'calendar-day--work'}"><b>${d}</b><small>${double?'Pago doble':free?'Libre':'Laboral'}</small></div>`}).join('');</script></body></html>
+<body data-page="calendario">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Calendario laboral" data-subtitle="Año 2026 · Feriados, jornadas y descansos.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-bell"></i> Próximo feriado</h2><span class="panel__count">Pago doble</span></div>
+        <div class="panel__body"><div id="nextHoliday" class="next-holiday"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel__body">
+          <div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Feriado · Pago doble</span></div>
+          <div class="holiday-months" id="calendar"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const calendarYear = 2026;
+  const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Setiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const weekdays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const holidays = [
+    { m: 0, d: 1, name: 'Año Nuevo', workers: ['Marco Vega', 'Laura Jiménez', 'Sofía Ramírez'], pay: true },
+    { m: 3, d: 2, name: 'Jueves Santo', workers: ['Jorge Castro', 'Valentina Mora'], pay: true },
+    { m: 3, d: 3, name: 'Viernes Santo', workers: ['Andrés Solís', 'Camila Rojas'], pay: true },
+    { m: 3, d: 11, name: 'Día de Juan Santamaría', workers: ['Diego Vargas', 'Isabel Rojas'], pay: true },
+    { m: 4, d: 1, name: 'Día del Trabajo', workers: ['Fernando Ruiz', 'Marco Vega', 'Laura Jiménez'], pay: true },
+    { m: 6, d: 25, name: 'Anexión del Partido de Nicoya', workers: ['Sofía Ramírez', 'Jorge Castro'], pay: true },
+    { m: 7, d: 2, name: 'Día de la Virgen de los Ángeles', workers: ['Valentina Mora', 'Andrés Solís'], pay: false },
+    { m: 7, d: 15, name: 'Día de la Madre', workers: ['Camila Rojas', 'Diego Vargas', 'Isabel Rojas'], pay: true },
+    { m: 7, d: 31, name: 'Día de la Persona Negra y la Cultura Afrocostarricense', workers: ['Fernando Ruiz', 'Marco Vega'], pay: false },
+    { m: 8, d: 15, name: 'Día de la Independencia', workers: ['Laura Jiménez', 'Sofía Ramírez', 'Jorge Castro'], pay: true },
+    { m: 11, d: 1, name: 'Abolición del Ejército', workers: ['Valentina Mora', 'Andrés Solís'], pay: false },
+    { m: 11, d: 25, name: 'Navidad', workers: ['Camila Rojas', 'Diego Vargas', 'Fernando Ruiz'], pay: true }
+  ];
+  const holidayKey = (day, month) => holidays.find((h) => h.m === month && h.d === day);
+  const approvedMedicalRequest = (day, month) => JSON.parse(localStorage.getItem('aaa_medical_requests') || '[]').find((request) => request.status === 'Aprobada' && request.date === `${calendarYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`);
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    const esc = window.AAA.esc;
+    const title = document.querySelector('.portal-topbar__titles h1') || document.querySelector('.portal-page h1');
+    if (title) title.textContent = t('Calendario laboral');
+    const subtitle = document.querySelector('.portal-topbar__titles p:not(.eyebrow)');
+    if (subtitle) subtitle.textContent = `${t('Año')} ${calendarYear} · ${t('Feriados, jornadas y descansos.')}`;
+
+    const today = new Date();
+    const next = holidays.find((h) => new Date(calendarYear, h.m, h.d) >= today) || holidays[0];
+    const nextDate = new Date(calendarYear, next.m, next.d);
+    document.getElementById('nextHoliday').innerHTML =
+      `<p class="next-holiday__date"><b>${t(weekdays[nextDate.getDay()])} ${next.d} de ${t(monthNames[next.m])}</b></p>`
+      + `<p class="next-holiday__name"><i class="fa-solid fa-umbrella-beach"></i> ${t(next.name)}</p>`
+      + `<p class="next-holiday__workers">${t('Trabajan')}: <b>${next.workers.map((w) => esc(w)).join(', ')}</b></p>`
+      + `<p class="next-holiday__pay"><i class="fa-solid fa-money-bill-wave"></i> ${next.pay ? t('Pago doble') : t('Feriado de pago no obligatorio')}</p>`;
+
+    document.getElementById('calendar').innerHTML = monthNames.map((month, monthIndex) => {
+      const daysInMonth = new Date(calendarYear, monthIndex + 1, 0).getDate();
+      const offset = new Date(calendarYear, monthIndex, 1).getDay();
+      const cells = weekdays.map((x) => `<div class="calendar-weekday">${t(x)}</div>`).join('')
+        + Array.from({ length: offset }, () => '<div class="calendar-day calendar-day--empty"></div>').join('')
+        + Array.from({ length: daysInMonth }, (_, i) => {
+          const day = i + 1;
+          const weekday = new Date(calendarYear, monthIndex, day).getDay();
+          const free = weekday === 0 || weekday === 6;
+          const holiday = holidayKey(day, monthIndex);
+          const medical = approvedMedicalRequest(day, monthIndex);
+          if (holiday) {
+            return `<div class="calendar-day holiday-day ${next === holiday ? 'holiday-day--next' : ''}"><b>${day}</b><small class="holiday-pay">${holiday.pay ? t('Pago doble') : t('Feriado')}</small><small class="holiday-names">${t(holiday.name)}<br>${holiday.workers.map((w) => esc(w)).join(', ')}</small></div>`;
+          }
+          if (medical) return `<div class="calendar-day calendar-day--medical"><b>${day}</b><small>Cita médica</small><small>${esc(medical.reason)}</small></div>`;
+          return `<div class="calendar-day ${free ? 'calendar-day--free' : 'calendar-day--work'}"><b>${day}</b><small>${free ? t('Libre') : t('Laboral')}</small></div>`;
+        });
+      return `<div class="holiday-month"><h4>${t(month)} ${calendarYear}</h4><div class="work-calendar">${cells}</div></div>`;
+    }).join('');
+  };
+</script>
+</body></html>

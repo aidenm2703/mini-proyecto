@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Evaluación de desempeño | AAA Software</title><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"><link rel="stylesheet" href="styles.css"></head>
+<body data-page="evaluacion">
+<div class="portal-shell">
+  <aside class="portal-nav" id="portalNav" aria-label="Menú del colaborador"></aside>
+  <main class="portal-page" data-title="Evaluación de desempeño" data-subtitle="Evalúa tus objetivos del trimestre y tu desempeño cada 3 meses.">
+    <header class="portal-topbar" id="portalTopbar"></header>
+    <div class="portal-content">
+      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <section class="panel">
+        <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clipboard-check"></i> Evaluación trimestral de desempeño</h2><span class="badge badge--quarter">Q3 · Ago–Oct 2026</span></div>
+        <div class="panel__body">
+          <p class="schedule-note">Cada 3 meses administración evalúa tu desempeño.</p>
+          <div id="lastEvaluation" class="schedule-note"><strong>Última evaluación:</strong> Pendiente</div>
+          <form id="quarterlyEvaluationForm">
+            <div class="objective-list" id="objectives"></div>
+            <button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-star"></i> Guardar auto-evaluación</button>
+          </form>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="node_modules/i18next/dist/umd/i18next.min.js"></script>
+<script src="i18n.js"></script>
+<script src="portal.js"></script>
+<script>
+  const evaluationQuestions = [
+    { section: 'Autoevaluación', text: '¿Cuáles fueron tus principales logros en este periodo?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué objetivos cumpliste y cuáles no? ¿Por qué?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué habilidades desarrollaste o fortaleciste?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué desafíos enfrentaste y cómo los resolviste?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿En qué áreas te gustaría mejorar?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Qué apoyo necesitas de tu líder o del equipo para crecer?', type: 'text' },
+    { section: 'Autoevaluación', text: '¿Cómo calificarías tu desempeño general?', type: 'stars' },
+    { section: 'Evaluación Manager', text: '¿Cumplió los objetivos/OKRs establecidos?', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Calidad técnica del trabajo entregado', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Cumplimiento de plazos y compromisos', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Capacidad de resolución de problemas', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Comunicación y colaboración con el equipo', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Proactividad e iniciativa', type: 'stars' },
+    { section: 'Evaluación Manager', text: 'Adherencia a buenas prácticas', type: 'stars' },
+    { section: 'Evaluación Manager', text: '¿Qué fortalezas destacarías?', type: 'text' },
+    { section: 'Evaluación Manager', text: '¿Qué áreas de oportunidad identificas?', type: 'text' },
+    { section: 'Evaluación Manager', text: '¿Está listo para asumir más responsabilidad?', type: 'text' },
+    { section: 'Evaluación 360°', text: '¿Cómo calificarías la colaboración en proyectos conjuntos?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Es clara y efectiva su comunicación?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Comparte conocimiento con el equipo?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Cómo maneja el feedback y los conflictos?', type: 'stars' },
+    { section: 'Evaluación 360°', text: '¿Qué es lo que más valoras?', type: 'text' },
+    { section: 'Evaluación 360°', text: '¿Qué podría mejorar?', type: 'text' },
+    { section: 'Competencias técnicas', text: 'Calidad y mantenibilidad del código', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Capacidad de diseño de soluciones', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Conocimiento del stack del equipo', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Participación en code reviews', type: 'stars' },
+    { section: 'Competencias técnicas', text: 'Nivel de autonomía técnica', type: 'stars' },
+    { section: 'Soft skills', text: 'Trabajo en equipo', type: 'stars' },
+    { section: 'Soft skills', text: 'Adaptabilidad al cambio', type: 'stars' },
+    { section: 'Soft skills', text: 'Gestión del tiempo', type: 'stars' },
+    { section: 'Soft skills', text: 'Liderazgo', type: 'stars' },
+    { section: 'Soft skills', text: 'Mentalidad de mejora continua', type: 'stars' },
+    { section: 'Cierre', text: 'Objetivos para el próximo periodo', type: 'text' },
+    { section: 'Cierre', text: 'Plan de desarrollo', type: 'text' },
+    { section: 'Cierre', text: '¿Interés en cambiar de rol o equipo?', type: 'text' }
+  ];
+
+  const starHTML = `<div class="star-rating" data-valor="0">
+    <i class="fa-regular fa-star" data-n="1" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="2" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="3" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="4" style="cursor:pointer; font-size:1.2rem; margin-right:4px;"></i>
+    <i class="fa-regular fa-star" data-n="5" style="cursor:pointer; font-size:1.2rem;"></i>
+  </div>`;
+
+  const renderLastEvaluation = () => {
+    const saved = JSON.parse(localStorage.getItem('aaa_quarterly_review') || 'null');
+    const node = document.getElementById('lastEvaluation');
+    if (node) node.innerHTML = `<strong>${window.AAA.t('Última evaluación:')}</strong> ${window.AAA.t(saved ? 'Enviada' : 'Pendiente')}`;
+  };
+
+  window.renderPage = () => {
+    const t = window.AAA.t;
+    const container = document.getElementById('objectives');
+    let lastSection = null;
+    container.innerHTML = evaluationQuestions.map((question, index) => {
+      const num = index + 1;
+      const html = [
+        lastSection !== question.section ? `<h3>${t(question.section)}</h3>` : '',
+        `<div style="margin-bottom:15px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:10px;">`,
+        `<p style="margin-bottom:5px; font-size:0.9rem;">${num}. ${t(question.text)}</p>`,
+        question.type === 'stars'
+          ? `${starHTML}<input type="hidden" name="p[${num}]" value="0">`
+          : `<textarea style="width:100%;background:#111827;border:1px solid rgba(255,255,255,0.1);color:white;padding:8px;border-radius:6px;min-height:60px;" name="p[${num}]" placeholder="Escribe aquí..."></textarea>`,
+        `</div>`
+      ].join('');
+      lastSection = question.section;
+      return html;
+    }).join('');
+    const script = document.createElement('script');
+    script.textContent = `document.querySelectorAll('.star-rating').forEach(container => {
+      container.addEventListener('click', function(e) {
+        if(e.target.tagName === 'I') {
+          const val = parseInt(e.target.getAttribute('data-n'));
+          this.setAttribute('data-valor', val);
+          this.querySelectorAll('i').forEach(s => {
+            const n = parseInt(s.getAttribute('data-n'));
+            if(n <= val) { s.className = 'fa-solid fa-star'; s.style.color = '#ffb84d'; }
+            else { s.className = 'fa-regular fa-star'; s.style.color = ''; }
+          });
+          this.parentElement.querySelector('input[type="hidden"]').value = val;
+        }
+      });
+    });`;
+    container.appendChild(script);
+    renderLastEvaluation();
+  };
+
+  document.getElementById('quarterlyEvaluationForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    const answered = Object.values(data).some((value) => value && value !== '0');
+    if (!answered) return window.AAA.showToast(window.AAA.t('Responda al menos una pregunta antes de guardar.'), true);
+    localStorage.setItem('aaa_quarterly_review', JSON.stringify(data));
+    renderLastEvaluation();
+    window.AAA.showToast(window.AAA.t('Auto-evaluación guardada.'));
+  });
+</script>
+</body></html>

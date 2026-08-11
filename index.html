@@ -40,8 +40,37 @@
 
         <!-- Logo del login -->
         <div class="login-logo">
-          <span class="brand-mark" aria-label="Logo AAA Software"><img src="logo.jpeg" alt="Logo AAA Software"></span>
+          <span class="brand-mark" aria-label="Logo AAA Software"><b>AAA</b></span>
         </div>
+
+        <!-- Verificación biométrica: solo se muestra cuando el usuario toca el botón. -->
+        <div class="biometric-auto" id="biometricAuto" hidden>
+          <div class="biometric-auto__status" id="biometricAutoStatus"><i class="fa-solid fa-camera"></i><span>Iniciando reconocimiento facial…</span></div>
+          <div class="face-scan" id="faceScan">
+            <video id="biometricAutoVideo" class="biometric-video" autoplay muted playsinline></video>
+            <div class="face-scan__overlay" id="faceScanOverlay" hidden>
+              <div class="face-scan__frame"></div>
+              <div class="face-scan__guides">
+                <span class="face-scan__line"></span>
+                <span class="face-scan__mark face-scan__mark--eye-l"></span>
+                <span class="face-scan__mark face-scan__mark--eye-r"></span>
+                <span class="face-scan__mark face-scan__mark--mouth"></span>
+              </div>
+              <span class="face-scan__label" id="faceScanLabel">Analizando facciones…</span>
+            </div>
+            <div class="face-scan__data" id="faceScanData">
+              <span><i class="fa-solid fa-ruler"></i> Distancia interocular <b id="dataEyes">0.0</b></span>
+              <span><i class="fa-solid fa-scale-balanced"></i> Simetría <b id="dataSymmetry">0%</b></span>
+              <span><i class="fa-solid fa-shield-halved"></i> Confianza <b id="dataConfidence">0%</b></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verificación biométrica bajo demanda. -->
+        <button type="button" id="btnStartBiometric" class="btn-biometric" aria-label="Iniciar verificación biométrica">
+          <i class="fa-solid fa-user-shield"></i>
+          <span>Verificar biometría</span>
+        </button>
 
         <h1 class="login-title">Bienvenido al sistema de login</h1>
         <p class="login-subtitle">AAA Software · Ingrese sus credenciales aquí</p>
@@ -104,13 +133,7 @@
             </div>
           </div>
 
-          <!-- Simulación visual de reconocimiento facial para la presentación. -->
-          <div class="biometric-access">
-            <div class="biometric-camera"><i class="fa-solid fa-camera"></i><span id="biometricStatus">Cámara lista para verificar identidad</span></div>
-            <video id="biometricVideo" class="biometric-video" autoplay muted playsinline hidden></video>
-            <button type="button" id="btnBiometric" class="btn-biometric"><i class="fa-solid fa-fingerprint"></i> Verificar biometría</button>
-          </div>
-
+          <!-- La verificación biométrica se activa solo con el botón superior. -->
           <button type="submit" class="btn-login">
             <i class="fa-solid fa-arrow-right-to-bracket"></i>
             Iniciar sesión
@@ -211,13 +234,59 @@
             </a>
           </li>
           <li class="user-only">
-            <a href="calendario.html" class="sidebar-nav__link" data-section="miCalendario" data-new-tab="true">
+            <a href="calendario.html" class="sidebar-nav__link" data-new-tab="true">
               <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario laboral</span>
             </a>
           </li>
           <li class="user-only">
             <a href="encuesta-usuario.html" class="sidebar-nav__link" data-section="miEncuesta" data-new-tab="true">
               <i class="fa-solid fa-square-poll-vertical"></i><span class="sidebar-nav__text">Mi encuesta</span>
+            </a>
+          </li>
+          <li class="sidebar-group user-only" aria-hidden="true"><span>Mi portal</span></li>
+          <li class="user-only">
+            <a href="evaluacion.html" class="sidebar-nav__link" data-section="evaluacion" data-new-tab="true">
+              <i class="fa-solid fa-clipboard-check"></i><span class="sidebar-nav__text">Evaluación de desempeño</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="plan-carrera.html" class="sidebar-nav__link" data-section="planCarrera" data-new-tab="true">
+              <i class="fa-solid fa-sitemap"></i><span class="sidebar-nav__text">Plan de carrera</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="formacion.html" class="sidebar-nav__link" data-section="formacion" data-new-tab="true">
+              <i class="fa-solid fa-graduation-cap"></i><span class="sidebar-nav__text">Cursos y certificaciones</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="permisos.html" class="sidebar-nav__link" data-section="permisos" data-new-tab="true">
+              <i class="fa-solid fa-envelope-open-text"></i><span class="sidebar-nav__text">Solicitar permiso</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="noticias.html" class="sidebar-nav__link" data-section="noticias" data-new-tab="true">
+              <i class="fa-solid fa-newspaper"></i><span class="sidebar-nav__text">Noticias y anuncios</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="directorio.html" class="sidebar-nav__link" data-section="directorio" data-new-tab="true">
+              <i class="fa-solid fa-address-book"></i><span class="sidebar-nav__text">Directorio de empleados</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="eventos.html" class="sidebar-nav__link" data-section="eventos" data-new-tab="true">
+              <i class="fa-solid fa-calendar-days"></i><span class="sidebar-nav__text">Calendario de eventos</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="nomina.html" class="sidebar-nav__link" data-section="nomina" data-new-tab="true">
+              <i class="fa-solid fa-file-invoice-dollar"></i><span class="sidebar-nav__text">Recibos de nómina</span>
+            </a>
+          </li>
+          <li class="user-only">
+            <a href="politica.html" class="sidebar-nav__link" data-section="politica" data-new-tab="true">
+              <i class="fa-solid fa-file-shield"></i><span class="sidebar-nav__text">Política interna</span>
             </a>
           </li>
         </ul>
@@ -273,7 +342,7 @@
           <div class="notification-wrap">
           <button id="btnNotifications" class="header-icon-btn" aria-label="Ver notificaciones" aria-expanded="false">
             <i class="fa-solid fa-bell"></i>
-            <span class="header-icon-btn__badge">3</span>
+            <span class="header-icon-btn__badge"></span>
           </button>
           <div id="notificationPanel" class="notification-panel" hidden>
             <div class="notification-panel__header"><strong>Notificaciones</strong><button id="btnClearNotifications" type="button">Marcar leídas</button></div>
@@ -291,6 +360,12 @@
               <span class="header-user__role" id="headerUserRole">Admin</span>
             </div>
           </div>
+
+          <!-- Botón Mi Perfil en header -->
+          <button id="btnMiPerfil" class="btn-action btn-action--secondary header-user-profile" type="button" aria-label="Mi Perfil">
+            <i class="fa-solid fa-user"></i>
+            Mi Perfil
+          </button>
 
           <!-- Botón logout en header -->
           <button id="btnHeaderLogout" class="btn-header-logout" aria-label="Cerrar sesión">
@@ -778,7 +853,8 @@
         <section class="admin-only survey-admin-results" aria-label="Resultados de encuesta"><div class="stats-grid"><div class="stat-card"><div class="stat-card__info"><span id="surveySatisfaction" class="stat-card__value">0%</span><span class="stat-card__label">Satisfacción general</span></div></div><div class="stat-card"><div class="stat-card__info"><span id="surveyAverage" class="stat-card__value">0/5</span><span class="stat-card__label">Promedio de encuestas</span></div></div><div class="stat-card"><div class="stat-card__info"><span id="surveyCount" class="stat-card__value">0</span><span class="stat-card__label">Respuestas recibidas</span></div></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title">Resultados del personal</h2></div><div class="panel__body"><div id="surveyBreakdown" class="survey-breakdown"></div><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Fecha</th><th>Calificación</th><th>Comentario</th></tr></thead><tbody id="surveyResponsesBody"></tbody></table></div></div></div></section>
         <section id="secEmpleados" class="content-section admin-only" aria-label="Empleados y tareas">
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-user-plus"></i> Agregar empleado</h2></div><div class="panel__body"><form id="employeeForm" class="form-grid"><div class="form-group"><label for="employeeName">Nombre completo</label><input id="employeeName" class="form-input" required placeholder="Ej. Ana López"></div><div class="form-group"><label for="employeeUsername">Usuario</label><input id="employeeUsername" class="form-input" required placeholder="ana.lopez"></div><div class="form-group form-group--full"><label for="employeePassword">Contraseña inicial</label><input id="employeePassword" type="password" class="form-input" required></div><button class="btn-action btn-action--primary form-group--full" type="submit"><i class="fa-solid fa-plus"></i> Crear empleado</button></form></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Asignar tarea</h2></div><div class="panel__body"><form id="taskAssignmentForm" class="form-grid"><div class="form-group"><label for="taskEmployee">Empleado</label><select id="taskEmployee" class="form-select" required></select></div><div class="form-group"><label for="taskDate">Día</label><input id="taskDate" type="date" class="form-input" required></div><div class="form-group form-group--full"><label for="taskTitle">Tarea</label><input id="taskTitle" class="form-input" required></div><div class="form-group"><label for="taskPriority">Prioridad</label><select id="taskPriority" class="form-select"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-calendar-plus"></i> Asignar</button></form></div></div></div>
-          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-users"></i> Empleados registrados</h2><div class="task-admin-actions"><button id="btnNuevaReunion" type="button" class="btn-action btn-action--primary"><i class="fa-solid fa-video"></i> Nueva reunión</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Nombre completo</th><th>Usuario</th><th>Tareas asignadas</th><th>Acciones</th></tr></thead><tbody id="employeesBody"></tbody></table></div></div></div>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-notes-medical"></i> Solicitudes de cita médica</h2></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Colaborador</th><th>Fecha</th><th>Motivo</th><th>Estado</th><th>Acción</th></tr></thead><tbody id="medicalRequestsBody"></tbody></table></div></div></div>
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-list-check"></i> Control de tareas asignadas</h2><div class="task-admin-actions"><select id="taskPriorityFilter" class="form-select" aria-label="Filtrar por prioridad"><option value="todas">Todas las prioridades</option><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select><button id="btnClearTasks" type="button" class="btn-action btn-action--danger"><i class="fa-solid fa-broom"></i> Limpiar tareas</button></div></div><div class="panel__body"><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Empleado</th><th>Tarea</th><th>Fecha</th><th>Prioridad</th><th>Estado</th></tr></thead><tbody id="assignedTasksBody"></tbody></table></div></div></div>
           <div class="two-column-layout"><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-chart-line"></i> Productividad por empleado</h2></div><div class="panel__body" id="productivityReport"></div></div><div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-trophy"></i> Reconocimiento mensual</h2></div><div class="panel__body" id="monthlyRecognition"></div></div></div>
         </section>
@@ -808,16 +884,10 @@
           <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-pen"></i> Reporte de jornada</h2></div><div class="panel__body"><form id="dailyReportForm" class="daily-report"><label for="dailyReportText">Reporte de lo realizado hoy</label><textarea id="dailyReportText" class="form-input form-textarea" required placeholder="Cuente qué realizó durante la jornada..."></textarea><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar reporte</button><p id="dailyReportStatus" class="justification-status">Aún no ha enviado su reporte.</p></form></div></div>
           <div class="two-column-layout">
             <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-clock"></i> Horario de lunes a viernes</h2></div><div class="panel__body"><table class="data-table schedule-table"><thead><tr><th>Día</th><th>Entrada</th><th>Almuerzo</th><th>Salida</th></tr></thead><tbody><tr><td>Lunes a viernes</td><td>08:00 AM</td><td>12:00 PM – 01:00 PM</td><td>05:00 PM</td></tr></tbody></table><p class="schedule-note">Jornada: 8 horas laborales + 1 hora de almuerzo.</p></div></div>
-            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><input id="absenceProof" class="form-input file-input" type="file" accept="image/*"></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
+            <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-file-circle-exclamation"></i> Justificar falta</h2></div><div class="panel__body"><p class="absence-message"><strong>Falta registrada:</strong> 05 de agosto de 2026</p><form id="justifyAbsenceForm"><div class="form-group"><label for="absenceReason">Motivo de la justificación</label><textarea id="absenceReason" class="form-input form-textarea" required placeholder="Explique el motivo de su ausencia..."></textarea></div><div class="form-group"><label for="absenceProof">Comprobante médico o carta (foto)</label><label class="file-drop" for="absenceProof"><i class="fa-solid fa-paperclip"></i><span id="absenceProofLabel">Seleccionar archivo</span></label><input id="absenceProof" type="file" accept="image/*" hidden></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar justificación</button></form><p id="justificationStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
           </div>
-        </section>
+          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-user-doctor"></i> Solicitar día para cita médica</h2></div><div class="panel__body"><form id="medicalRequestForm" class="form-grid"><div class="form-group"><label for="medicalDate">Fecha de la cita</label><input id="medicalDate" type="date" class="form-input" required></div><div class="form-group form-group--full"><label for="medicalReason">Motivo</label><textarea id="medicalReason" class="form-input form-textarea" required placeholder="Ej. Consulta de control médico"></textarea></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar solicitud</button></form><p id="medicalRequestStatus" class="justification-status">Sin solicitud enviada.</p></div></div>
 
-        <!-- Calendario de ejemplo para distinguir descansos, pagos dobles y días laborales. -->
-        <section id="secMiEncuesta" class="content-section user-only" aria-label="Encuesta de satisfacción">
-          <div class="panel survey-panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-square-poll-vertical"></i> Encuesta de satisfacción</h2><span class="panel__count">Tu opinión cuenta</span></div><div class="panel__body"><p class="schedule-note">Califica tu experiencia laboral para que administración pueda mejorar.</p><form id="employeeSurvey"><div id="employeeSurveyQuestions" class="survey-questions"></div><div class="form-group"><label for="surveyComment">Comentario opcional</label><textarea id="surveyComment" class="form-input form-textarea" placeholder="¿Qué podemos mejorar?"></textarea></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-paper-plane"></i> Enviar encuesta</button></form></div></div>
-        </section>
-        <section id="secMiCalendario" class="content-section user-only" aria-label="Calendario laboral">
-          <div class="panel"><div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-calendar-days"></i> Calendario laboral · Agosto 2026</h2></div><div class="panel__body"><div class="calendar-legend"><span><b class="legend-dot legend-dot--work"></b>Día laboral</span><span><b class="legend-dot legend-dot--free"></b>Día libre</span><span><b class="legend-dot legend-dot--double"></b>Pago doble</span></div><div class="work-calendar" id="workCalendar"></div></div></div>
         </section>
 
         <footer class="company-footer" aria-label="Identidad de AAA Software">
@@ -836,6 +906,41 @@
   <!-- ================================================================
        MODAL DE CONFIRMACIÓN (para eliminar registros)
        ================================================================ -->
+  <div id="modalPerfil" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="perfilModalTitle">
+    <div class="modal-box">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title" id="perfilModalTitle">Mi Perfil</h3>
+        <button class="btn-icon" id="btnCerrarPerfil" type="button" aria-label="Cerrar perfil">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="perfilForm" class="form-panel__body form-grid" novalidate>
+        <div class="form-group">
+          <label for="perfilNombre">Nombre completo</label>
+          <input id="perfilNombre" type="text" class="form-input" placeholder="Ej: María López" required>
+        </div>
+        <div class="form-group">
+          <label for="perfilCorreo">Correo</label>
+          <input id="perfilCorreo" type="email" class="form-input" placeholder="Ej: maria@correo.com" required>
+        </div>
+        <div class="form-group">
+          <label for="perfilTelefono">Teléfono</label>
+          <input id="perfilTelefono" type="tel" class="form-input" placeholder="Ej: 8888-9999" required>
+        </div>
+        <div class="form-group">
+          <label for="perfilCargo">Cargo</label>
+          <input id="perfilCargo" type="text" class="form-input" placeholder="Ej: Analista de operaciones">
+        </div>
+        <div class="form-group form-group--full modal-box__actions">
+          <button id="btnGuardarPerfil" class="btn-action btn-action--primary" type="submit">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <div id="confirmModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
     <div class="modal-box">
       <div class="modal-box__icon modal-box__icon--danger">
@@ -864,6 +969,51 @@
   <div id="toast" class="toast" role="alert" aria-live="polite">
     <i id="toastIcon" class="fa-solid fa-circle-check"></i>
     <span id="toastMessage">Operación exitosa</span>
+  </div>
+
+  <div id="managerEvaluationModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="managerEvaluationTitle">
+    <div class="modal-box">
+      <div class="modal-box__header"><h3 class="modal-box__title" id="managerEvaluationTitle">Evaluación Manager</h3><button id="btnCerrarEvaluacion" class="btn-icon" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button></div>
+      <form id="managerEvaluationForm" class="form-panel__body"><p id="managerEvaluationEmployee" class="schedule-note"></p><div id="managerEvaluationQuestions"></div><button class="btn-action btn-action--primary" type="submit"><i class="fa-solid fa-floppy-disk"></i> Guardar evaluación</button></form>
+    </div>
+  </div>
+
+  <!-- Modal para crear una reunión e invitar a varios empleados. -->
+  <div id="meetingModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="meetingModalTitle">
+    <div class="modal-box">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title" id="meetingModalTitle">Nueva reunión</h3>
+        <button class="btn-icon" id="btnCerrarReunion" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="form-panel__body form-grid">
+        <div class="form-group form-group--full"><label for="meetingTitle">Título de la reunión</label><input id="meetingTitle" class="form-input" placeholder="Ej: Revisión de métricas"></div>
+        <div class="form-group form-group--full"><label>Empleados invitados</label><div id="meetingInvitees" class="meeting-invitees"></div></div>
+        <div class="form-group"><label for="meetingDate">Día</label><input id="meetingDate" type="date" class="form-input"></div>
+        <div class="form-group"><label for="meetingTime">Hora</label><input id="meetingTime" type="time" class="form-input"></div>
+        <div class="form-group form-group--full"><label for="meetingPlace">Lugar</label><input id="meetingPlace" class="form-input" placeholder="Ej: Sala de reuniones"></div>
+        <div class="form-group form-group--full modal-box__actions">
+          <button id="btnCrearReunion" class="btn-action btn-action--primary" type="button"><i class="fa-solid fa-video"></i> Crear reunión</button>
+          <button id="btnCancelarReunion" class="btn-action btn-action--secondary" type="button">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal que simula una llamada telefónica a un empleado. -->
+  <div id="callModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+    <div class="modal-box modal-box--call">
+      <div class="modal-box__header">
+        <h3 class="modal-box__title">Llamando</h3>
+        <button class="btn-icon" id="btnCerrarLlamada" type="button" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="call-box">
+        <div class="call-box__avatar"><i class="fa-solid fa-user-tie"></i></div>
+        <p id="callContact" class="call-box__name">Empleado</p>
+        <p id="callState" class="call-box__state">Llamando...</p>
+        <p id="callTimer" class="call-box__timer">00:00</p>
+        <button id="btnColgar" class="btn-action btn-action--danger" type="button"><i class="fa-solid fa-phone-slash"></i> Colgar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Aviso visual que aparece al llegar a tres intentos de acceso fallidos. -->
