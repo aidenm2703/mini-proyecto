@@ -456,6 +456,8 @@
     'Cursos Disponibles': 'Available courses',
     'Capacitaciones Completadas': 'Completed trainings',
     'Inscribirse': 'Enroll', 'Inscrito': 'Enrolled', 'Duración': 'Duration', 'Plataforma': 'Platform',
+    'Desinscribirse': 'Unenroll', 'Te has desinscrito del curso.': 'You have unenrolled from the course.',
+    'Máximo': 'Maximum', 'cursos. Completa alguno para poder inscribirte en otro.': 'courses. Complete one to be able to enroll in another.',
     'Completado': 'Completed', 'Fecha de finalización': 'Completion date',
     'RRHH': 'HR', 'General': 'General', 'Celebraciones': 'Celebrations',
     'Puesto': 'Position', 'Departamento': 'Department',
