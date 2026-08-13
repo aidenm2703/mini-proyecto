@@ -263,30 +263,50 @@
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   window.AAA.pdf = { open: openPdf, download: downloadPdf };
-  // Abre el PDF dentro de una página con barra de herramientas
-  // (Imprimir y Volver a la página anterior).
+  // Abre el PDF en un visor dentro de la misma página (modal),
+  // con botones de Imprimir, Descargar y Volver a la página anterior.
+  // No usa ventanas emergentes, por lo que funciona siempre.
   const openDocument = (rows, options = {}) => {
-    const url = URL.createObjectURL(pdfBlob(rows));
-    const win = window.open('', '_blank');
-    if (!win) { window.location.href = url; return; }
+    const pdfUrl = URL.createObjectURL(pdfBlob(rows));
     const title = options.title || 'Documento';
-    win.document.write(
-      '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + esc(title) + '</title>' +
-      '<style>' +
-      'body{margin:0;font-family:Arial,sans-serif;background:#eef1f5;}' +
-      '.doc-toolbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fff;border-bottom:1px solid #d0d7e2;box-shadow:0 1px 4px rgba(0,0,0,.08);}' +
-      '.doc-toolbar__title{font-weight:700;color:#1d4ed8;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}' +
-      '.doc-toolbar button{border:1px solid #c3cbd8;background:#fff;color:#1d4ed8;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}' +
-      '.doc-toolbar button:hover{background:#eef4ff;}' +
-      '.doc-toolbar button.primary{background:#1d4ed8;border-color:#1d4ed8;color:#fff;}' +
-      'iframe{width:100%;height:calc(100vh - 60px);border:0;display:block;}' +
-      '</style></head><body>' +
-      '<div class="doc-toolbar"><span class="doc-toolbar__title">' + esc(title) + '</span>' +
-      '<button class="primary" onclick="window.print()">Imprimir</button>' +
-      '<button onclick="window.history.length > 1 ? window.history.back() : window.close()">Volver a la página anterior</button>' +
-      '</div><iframe src="' + url + '"></iframe></body></html>'
-    );
-    win.document.close();
+    const escTitle = esc(title);
+    const filename = `${title.replace(/\s+/g, '-')}.pdf`;
+    const escFile = esc(filename);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'pdf-modal';
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-label', escTitle);
+    overlay.innerHTML =
+      '<div class="pdf-modal__toolbar">' +
+      '<span class="pdf-modal__title">' + escTitle + '</span>' +
+      '<button type="button" class="pdf-modal__btn pdf-modal__btn--primary" data-pdf-print><i class="fa-solid fa-print"></i> ' + t('Imprimir') + '</button>' +
+      '<button type="button" class="pdf-modal__btn" data-pdf-download><i class="fa-solid fa-download"></i> ' + t('Descargar') + '</button>' +
+      '<button type="button" class="pdf-modal__btn" data-pdf-close><i class="fa-solid fa-arrow-left"></i> ' + t('Volver a la página anterior') + '</button>' +
+      '</div>' +
+      '<iframe class="pdf-modal__frame" src="' + pdfUrl + '" title="' + escTitle + '"></iframe>';
+    document.body.appendChild(overlay);
+    document.body.classList.add('has-pdf-modal');
+
+    const frame = overlay.querySelector('.pdf-modal__frame');
+    overlay.querySelector('[data-pdf-print]').addEventListener('click', () => {
+      if (frame && frame.contentWindow) frame.contentWindow.print();
+    });
+    overlay.querySelector('[data-pdf-download]').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = escFile;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    });
+    const close = () => {
+      overlay.remove();
+      document.body.classList.remove('has-pdf-modal');
+      window.setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+    };
+    overlay.querySelector('[data-pdf-close]').addEventListener('click', close);
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') close(); });
   };
   window.AAA.pdf.openDocument = openDocument;
 

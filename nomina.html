@@ -97,7 +97,7 @@
     const t = window.AAA.t;
     const esc = window.AAA.esc;
     const profile = profiles[currentUserName] || profiles['María Fernanda López'];
-    return `<div class="receipt-card"><div class="receipt-card__head"><div><b>${esc(currentUserName)}</b><small>${esc(t(profile.position))}</small></div><span>${esc(receipt.period)}</span></div><div class="receipt-card__amounts"><div><small>${t('Salario bruto')}</small><b>${formatColones(receipt.gross)}</b></div><div class="receipt-card__neg"><small>CCSS (9.17%)</small><b>- ${formatColones(receipt.ccss)}</b></div><div class="receipt-card__neg"><small>${t('Asociación Solidarista')} (5%)</small><b>- ${formatColones(receipt.solidarista)}</b></div><div class="receipt-card__net"><small>${t('Total a recibir')}</small><b>${formatColones(receipt.net)}</b></div></div><div class="receipt-card__actions"><button type="button" class="btn-action btn-action--secondary" data-receipt="${esc(receipt.period)}"><i class="fa-solid fa-file-pdf"></i> ${t('Ver recibo PDF')}</button><button type="button" class="btn-action btn-action--primary" data-download="${esc(receipt.period)}"><i class="fa-solid fa-download"></i> ${t('Descargar')}</button></div></div>`;
+    return `<div class="receipt-card"><div class="receipt-card__head"><div><b>${esc(currentUserName)}</b><small>${esc(t(profile.position))}</small></div><span>${esc(receipt.period)}</span></div><div class="receipt-card__amounts"><div><small>${t('Salario bruto')}</small><b>${formatColones(receipt.gross)}</b></div><div class="receipt-card__neg"><small>CCSS (9.17%)</small><b>- ${formatColones(receipt.ccss)}</b></div><div class="receipt-card__neg"><small>${t('Asociación Solidarista')} (5%)</small><b>- ${formatColones(receipt.solidarista)}</b></div><div class="receipt-card__net"><small>${t('Total a recibir')}</small><b>${formatColones(receipt.net)}</b></div></div><div class="receipt-card__actions"><button type="button" class="btn-action btn-action--secondary" data-receipt="${esc(receipt.period)}"><i class="fa-solid fa-file-pdf"></i> ${t('Ver recibo PDF')}</button></div></div>`;
   };
   const receiptsByPeriod = () => {
     const profile = profiles[currentUserName] || profiles['María Fernanda López'];
@@ -120,7 +120,7 @@
     if (event.target.closest('[data-download]')) {
       pdf.download(pdfRowsFor(receipt), `Recibo-${period.replace(/\s+/g, '-')}.pdf`);
     } else {
-      pdf.openDocument(pdfRowsFor(receipt), { title: `${t('Recibo de nómina')} - ${receipt.period}` });
+      pdf.openDocument(pdfRowsFor(receipt), { title: `${window.AAA.t('Recibo de nómina')} - ${receipt.period}` });
     }
   });
 </script>
