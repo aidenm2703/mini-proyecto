@@ -2459,3 +2459,61 @@ body { background: radial-gradient(circle at 5% 5%, #17315c 0%, transparent 32%)
 .call-modal__btn--hang { background: #dc2626; color: #fff; }
 .call-modal__btn--hang:hover { background: #b91c1c; }
 .call-modal__btn.active { background: #2563eb; color: #fff; }
+
+/* ================================================================
+   VISOR DE PDF EN MODAL (recibos, certificados, etc.)
+   ================================================================ */
+.pdf-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  background: rgba(2, 6, 23, .94);
+}
+.pdf-modal__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #0b1630;
+  border-bottom: 1px solid rgba(255, 255, 255, .12);
+}
+.pdf-modal__title {
+  font-weight: 700;
+  color: #7dd3fc;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.pdf-modal__btn {
+  border: 1px solid rgba(255, 255, 255, .18);
+  background: #152347;
+  color: #e2f5ff;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 9px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pdf-modal__btn:hover { background: #1e3158; }
+.pdf-modal__btn--primary {
+  background: linear-gradient(90deg, #0ea5e9, #2563eb);
+  border-color: transparent;
+  color: #fff;
+}
+.pdf-modal__frame {
+  flex: 1;
+  width: 100%;
+  border: 0;
+  background: #fff;
+}
+@media print {
+  body.has-pdf-modal > :not(.pdf-modal) { display: none !important; }
+  .pdf-modal { position: fixed; inset: 0; background: #fff; }
+  .pdf-modal__toolbar { display: none !important; }
+  .pdf-modal__frame { position: fixed; inset: 0; width: 100%; height: 100%; }
+}

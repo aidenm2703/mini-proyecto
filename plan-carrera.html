@@ -6,7 +6,7 @@
   <main class="portal-page" data-title="Plan de carrera" data-subtitle="Tu plan de crecimiento profesional a mediano y largo plazo.">
     <header class="portal-topbar" id="portalTopbar"></header>
     <div class="portal-content">
-      <a class="btn-back-home" href="index.html#miPortal"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
+      <a class="btn-back-home" href="#" onclick="event.preventDefault(); try { document.getElementById('secMiPortal').style.display = 'none'; if (document.getElementById('secDashboard')) { document.getElementById('secDashboard').classList.add('active'); } else if (typeof changeSection === 'function') { changeSection('dashboard'); } } catch(e) { if (typeof changeSection === 'function') changeSection('dashboard'); }"><i class="fa-solid fa-arrow-left"></i> Volver al inicio</a>
       <section class="panel">
         <div class="panel__header"><h2 class="panel__title"><i class="fa-solid fa-sitemap"></i> Plan de carrera y objetivos individuales</h2></div>
         <div class="panel__body">
